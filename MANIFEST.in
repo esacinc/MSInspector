@@ -1,0 +1,3 @@
+include src/MSInspector/rScripts/*.R
+include src/MSInspector/skyrTemps/*.skyr
+include src/MSInspector/htmlTemps/*.html
