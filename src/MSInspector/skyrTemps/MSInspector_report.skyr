@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<views>
+  <view name="MSInspector_report" rowsource="pwiz.Skyline.Model.Databinding.Entities.Transition" sublist="Results!*">
+    <column name="Precursor.Peptide.Protein.Name" />
+    <column name="Precursor.Peptide.ModifiedSequence" />
+    <column name="Precursor.IsotopeLabelType" />
+    <column name="Precursor.Charge" />
+    <column name="ProductCharge" />
+    <column name="FragmentIon" />
+    <column name="Results!*.Value.Area" />
+    <column name="Results!*.Value.Background" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.Name" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Replicate Number&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Replicate&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.SampleType" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_SampleGroup&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Exp2 SampleGroup&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Exp3 SampleGroup&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Exp4 SampleGroup&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Day&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_IS Spike&quot;" />
+    <column name="Precursor.Peptide.&quot;annotation_PeptideConcentrationIS&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Concentration&quot;" />
+    <column name="Precursor.Peptide.&quot;annotation_PeptideConcentration&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_MultiplicationFactor&quot;" />
+    <column name="Precursor.Peptide.InternalStandardConcentration" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.AnalyteConcentration" />
+    <column name="Precursor.Peptide.ConcentrationMultiplier" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Temperature&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Time&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Time Units&quot;" />
+    <column name="Results!*.Value.PrecursorResult.PeptideResult.ResultFile.Replicate.&quot;annotation_Freeze Thaw Cycles&quot;" />
+    <column name="Results!*.Value.&quot;annotation_do not use&quot;" />
+  </view>
+</views>
