@@ -332,7 +332,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 # In this condition, warning message "Aggregation function missing: defaulting to length" is printed
                 errorType <- "Error"
                 errorSubtype <- "Area values of heavy or light Isotope"
-                errorReason <- paste("More than one area values exist for the combination of protein, peptidemodifiedsequence, precursorcharge, productcharge, fragmention, replicate, concentration, samplegroup, isspike and isotopelabel.")
+                errorReason <- paste("More than one area values of heavy or light isotope exist for the combination of protein, peptidemodifiedsequence, precursorcharge, productcharge, fragmention, replicate, concentration, samplegroup, isspike and isotopelabel.")
                 #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
                 errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
                 cat(errorInfor)
