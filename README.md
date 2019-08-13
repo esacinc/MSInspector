@@ -32,7 +32,7 @@ Installation
 
 ### Install MSInspector
 
-MSInspector is implemented as a Python program running on a Windows platform that requires pre-installation of Skyline https://skyline.ms/project/home/software/Skyline/begin.view and R https://cran.r-project.org/bin/windows/base/  <br /><br />
+MSInspector is implemented as a Python program running on a Windows platform that requires pre-installation of Skyline https://skyline.ms/project/home/software/Skyline/begin.view and R https://cran.r-project.org/bin/windows/base/  <br />
 
 It has the following dependencies:
 * For the Python (v2.7.\*) programming language: requires Python-related libraries, including pandas(>= v0.21.0) and Jinja2(v2.9.6). <br /><br />
