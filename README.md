@@ -5,16 +5,17 @@ A Python program to evaluate the data quality of the five experiments in CPTAC a
 The experiments are:<br />
 Experiment 1, response curve (or ResponseCurve)<br />
 Experiment 2, evaluation of repeatability (or ValidationSamples)<br />
-Experiment 3, selectivity (or Seletivity)<br />
+Experiment 3, selectivity (or Selectivity)<br />
 Experiment 4, stability (Stability)<br />
 Experiment 5, reproducible detection of endogenous analyte (Endogenous)<br />
 
-The current version supports Experiment 1 and Experiment 2 in old and new templates.
+The current version supports Experiment 1 and Experiment 2 in the old and new templates.
 
-The work flow of MSInspector is shown in .\src\MSInspector\doc\workflow.pdf. 
+The work flow of MSInspector is shown [here](https://github.com/esacinc/MSInspector/tree/master/src/MSInspector/doc/workflow.pdf).
 
-A report file (QC_report.html)will be generated which will capture the details of errors and warnings when running the R codes for the individual experiment.
-The details of the errors and warnings are listed in .\src\MSInspector\doc\issue_categories.pdf.
+A report file (QC_report.html) will be generated which will capture the details of errors and warnings when 
+running the R codes for the individual experiment.
+The details of the errors and warnings are listed [here](https://github.com/esacinc/MSInspector/tree/master/src/MSInspector/doc/issue_categories.pdf).
 
 Documentation
 -------------
@@ -32,9 +33,11 @@ Installation
 ### Install MSInspector
 
 MSInspector is implemented as a Python program running on a Windows platform that requires pre-installation of Skyline https://skyline.ms/project/home/software/Skyline/begin.view and R https://cran.r-project.org/bin/windows/base/  <br /><br />
-For Python (v2.7.\*) programming language, it requires Python-related libraries, including pandas(>= v0.21.0) and Jinja2(v2.9.6). <br /><br />
-For R (v3.5.\* is recommended) programming language, it requires R-related libraries, including Cairo, evaluate, stringr, plyr, MASS, ggplot2, reshape2 and dplyr. In order to install required libraries, please run `install.packages(c("Cairo", "evaluate", "stringr", "plyr", "MASS", "ggplot2", "reshape2", "dplyr"))` in the R console. <br /><br />
-For Skyline (v4.2 is recommended), it requires pre-installed Skyline command-line interface https://skyline.ms/_webdav/home/software/Skyline/@files/docs/Skyline%20Command-Line%20Interface-3_7.pdf. Or install Skyline administrator downloaded from https://skyline.ms/wiki/home/software/Skyline/page.view?name=install-administator-64. The command-line toolSkylineCmd.exe can be found in the installation directory. <br />
+
+It has the following dependencies:
+* For the Python (v2.7.\*) programming language: requires Python-related libraries, including pandas(>= v0.21.0) and Jinja2(v2.9.6). <br /><br />
+* For the R (v3.5.\* is recommended) programming language: requires R-related libraries, including Cairo, evaluate, stringr, plyr, MASS, ggplot2, reshape2 and dplyr. In order to install required libraries, please run `install.packages(c("Cairo", "evaluate", "stringr", "plyr", "MASS", "ggplot2", "reshape2", "dplyr"))` in the R console. <br /><br />
+* For Skyline (v4.2 is recommended): requires pre-installed Skyline command-line interface https://skyline.ms/_webdav/home/software/Skyline/@files/docs/Skyline%20Command-Line%20Interface-3_7.pdf. Or install Skyline administrator downloaded from https://skyline.ms/wiki/home/software/Skyline/page.view?name=install-administator-64. The command-line toolSkylineCmd.exe can be found in the installation directory. <br />
 
 MSInspector can be installed from the source code by pip:<br />
 1) Download MSInspector source code from URL and unzip the zipped file folder.<br />
@@ -71,7 +74,7 @@ Changelog
 ---------
 2019-05-31 Add a function to infer which template (new or old) is being applied to annotate the data for experiment 1 and experiment 2.<br />
 2019-06-13 Add a function to QA the experiment type from the input parameter.<br />
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add a function to QA the data type of several required attributes..<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add a function to QA the data type of several required attributes.<br />
 2019-06-26 Fix the bug caused by the space in the directory of the input parameters.<br />
 
 Citation
