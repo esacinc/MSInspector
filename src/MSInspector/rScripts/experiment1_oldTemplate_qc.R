@@ -493,7 +493,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 # However, the information of the peptide is sufficient to infer internal standard.
                 errorType <- "Error"
                 errorSubtype <- "Internal standard peptide concentration"
-                errorReason <- "The annotation of the concentration of the internal standard peptide has issues. Please check the annotation of IS Spike or PeptideConcentrationIS"
+                errorReason <- "The annotation of the concentration of the internal standard peptide has issues. Please check the annotation of IS Spike or PeptideConcentrationIS."
                 errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
                 cat(errorInfor)
                 cat('\n')
