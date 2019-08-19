@@ -270,9 +270,9 @@ def detectIS(skyFileDir, fileName, experiment_type, error_report_path, errorDfCo
 					# This situation works for experiment 1, 2, 3, 4 and 5.
 					 	#print >> sys.stderr, "Internal_standard value in the peptide_modifications underneath peptide_settings of the *.sky file of %s is unset. Please check it."%(skyFileDir)
 						if experiment_type=='exp1' or experiment_type=='exp2':
-							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard','Internal standard type in the peptide_modifications underneath peptide_settings is set to be none.']+['']*(errorDfColNumber-4))+'\n'
+							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard', 'The internal standard in the skyline file is set to be none.']+['']*(errorDfColNumber-4))+'\n'
 						else:
-							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard','Internal standard type in the peptide_modifications underneath peptide_settings is set to be none. Please set it to be heavy.']+['']*(errorDfColNumber-4))+'\n'
+							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard', 'The internal standard in the skyline file is set to be none. Please set it to be heavy.']+['']*(errorDfColNumber-4))+'\n'
 						with open(error_report_path, 'a') as outfTmp:
 							outfTmp.write(errorInfor)
 						internal_standard_type = 'none'
