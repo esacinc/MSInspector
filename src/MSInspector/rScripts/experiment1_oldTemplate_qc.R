@@ -822,7 +822,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                             } else if (cv_slope > cv_threshold) {
                                 errorType <- "Warning"
                                 errorSubtype <- "Bad linear regression fitting"
-                                errorReason <- paste("The coefficient of variance of slopes of the fragment ions (", paste(unique(thisPeptide$FragmentIon), collapse=', '), ") is(are) larger than ", cv_threshold, ".", sep= '')
+                                errorReason <- paste("The coefficient of variance of slopes of the fragment ions (", paste(unique(thisPeptide$FragmentIon), collapse=', '), ") is larger than ", cv_threshold, ".", sep= '')
                                 #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
                                 errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
                                 cat(errorInfor)
