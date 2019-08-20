@@ -811,22 +811,18 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                                           )
                             # Judge whether there are outliers among lm_data$Slope according to the coefficient of variance
                             cv_slope <- sd(lm_data$Slope)/mean(lm_data$Slope)
-                            if (is.nan(cv_slope)) {
-                                errorType <- "Warning"
-                                errorSubtype <- "Bad linear regression fitting"
-                                errorReason <- paste("The slopes of the fragments ions (", paste(unique(thisPeptide$FragmentIon), collapse=', '), ") is(are) 0.", sep= '')
-                                #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
-                                errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
-                                cat(errorInfor)
-                                cat('\n')
-                            } else if (cv_slope > cv_threshold) {
-                                errorType <- "Warning"
-                                errorSubtype <- "Bad linear regression fitting"
-                                errorReason <- paste("The coefficient of variance of slopes of the fragment ions (", paste(unique(thisPeptide$FragmentIon), collapse=', '), ") is larger than ", cv_threshold, ".", sep= '')
-                                #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
-                                errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
-                                cat(errorInfor)
-                                cat('\n')
+                            if ((! is.na(cv_slope)) & (! is.infinite(cv_slope)) & (! is.na(cv_slope))) {
+                                if (cv_slope > cv_threshold) {
+                                    errorType <- "Warning"
+                                    errorSubtype <- "Bad linear regression fitting"
+                                    errorReason <- paste("The coefficient of variance of slopes of the fragment ions (", paste(unique(thisPeptide$FragmentIon), collapse=', '), ") is larger than ", cv_threshold, ".", sep= '')
+                                    #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
+                                    errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
+                                    cat(errorInfor)
+                                    cat('\n')
+                                } else {
+                                    invisible()
+                                }
                             } else {
                                 invisible()
                             }
@@ -836,7 +832,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                             if ( rSquareMin < rSquare_threshold || pValueMax > pValue_threshold) {
                                 errorType <- "Warning"
                                 errorSubtype <- "Bad linear regression fitting"
-                                errorReason <- "The quality of fit of linear model is poor due to the low R2 or large p value of F-test in the process of linear regression."
+                                errorReason <- "The quality of fit of linear model is poor due to R2 < 0.5 or  p > 0.05 in the significance test for linear regression."
                                 #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
                                 errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
                                 cat(errorInfor)

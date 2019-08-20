@@ -956,7 +956,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                             }
                         }
                         if (length(concentration_with_less_replicates) > 0) {
-                            errorReason_tmp <- paste("For fragment ion ", current_plot_ion, ", less than 3 replicates in concentration(s) ", paste(concentration_with_less_replicates, collapse=', '), " on day ",  plot_day, sep="")
+                            errorReason_tmp <- paste("For fragment ion ", current_plot_ion, ", there are less than 3 replicates in concentration(s) ", paste(concentration_with_less_replicates, collapse=', '), " on day ",  plot_day, sep="")
                             errorReason_missing_replicate_point_on_day <- c(errorReason_missing_replicate_point_on_day, errorReason_tmp)
                         }
                     }
