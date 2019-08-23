@@ -374,18 +374,18 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 errorType <- "Error"
                 errorSubtype <- "Fragment ion"
                 errorReasonTmp <- "In response curve, no fragment ion with both heavy and light isotope exists."
-                omittedFragementIon <- c()
-                omittedFragementIonIsotope <- c()
+                omittedFragmentIon <- c()
+                omittedFragmentIonIsotope <- c()
                 for (item in s2) {
-                    omittedFragementIon <- c(omittedFragementIon, item)
-                    omittedFragementIonIsotope <- c(omittedFragementIonIsotope, unique(labkey.data[labkey.data$fragment_ion == item, ]$isotopelabel)[1])
+                    omittedFragmentIon <- c(omittedFragmentIon, item)
+                    omittedFragmentIonIsotope <- c(omittedFragmentIonIsotope, unique(labkey.data[labkey.data$fragment_ion == item, ]$isotopelabel)[1])
                 }
-                if (length(omittedFragementIon) == 0) {
+                if (length(omittedFragmentIon) == 0) {
                     errorReason <- errorReasonTmp
-                } else if (length(omittedFragementIon) == 1) {
-                    errorReason <- paste(errorReasonTmp, "The other fragment ion with one type of isotope is: ", paste(paste(omittedFragementIon, omittedFragementIonIsotope, sep='-'), collapse = ","), '.', sep="")
-                } else if (length(omittedFragementIon) > 1) {
-                    errorReason <- paste(errorReasonTmp, "The other fragment ions with one type of isotope are: ", paste(paste(omittedFragementIon, omittedFragementIonIsotope, sep='-'), collapse = ","), '.', sep="")
+                } else if (length(omittedFragmentIon) == 1) {
+                    errorReason <- paste(errorReasonTmp, "The other fragment ion with one type of isotope is: ", paste(paste(omittedFragmentIon, omittedFragmentIonIsotope, sep='-'), collapse = ","), '.', sep="")
+                } else if (length(omittedFragmentIon) > 1) {
+                    errorReason <- paste(errorReasonTmp, "The other fragment ions with one type of isotope are: ", paste(paste(omittedFragmentIon, omittedFragmentIonIsotope, sep='-'), collapse = ","), '.', sep="")
                 }
                 #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
                 errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
@@ -492,7 +492,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 # However, the information of the peptide is sufficient to infer internal standard.
                 errorType <- "Error"
                 errorSubtype <- "Internal standard peptide concentration"
-                errorReason <- "The annotation of the concentration of the internal standard peptide has issues. Please check the annotation of IS Spike or PeptideConcentrationIS."
+                errorReason <- "The annotation of the concentration of the internal standard peptide has issues. Please check the annotation of IS Spike or PeptideConcentrationIS"
                 errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
                 cat(errorInfor)
                 cat('\n')
@@ -717,20 +717,20 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 } else {
                     errorReasonTmp <- paste("In response curve, only two fragment ions ", s1[1] , ", " , s1[2] , " (with both heavy and light isotopes) exist.", sep="")
                 }
-                omittedFragementIon <- c()
-                omittedFragementIonIsotope <- c()
+                omittedFragmentIon <- c()
+                omittedFragmentIonIsotope <- c()
                 for (item in s2) {
                     if (!(item %in% s1)) {
-                        omittedFragementIon <- c(omittedFragementIon, item)
-                        omittedFragementIonIsotope <- c(omittedFragementIonIsotope, unique(labkey.data[labkey.data$fragment_ion == item, ]$isotopelabel)[1])
+                        omittedFragmentIon <- c(omittedFragmentIon, item)
+                        omittedFragmentIonIsotope <- c(omittedFragmentIonIsotope, unique(labkey.data[labkey.data$fragment_ion == item, ]$isotopelabel)[1])
                     }
                 }
-                if (length(omittedFragementIon) == 0) {
+                if (length(omittedFragmentIon) == 0) {
                     errorReason <- errorReasonTmp
-                } else if (length(omittedFragementIon) == 1) {
-                    errorReason <- paste(errorReasonTmp, "The other fragment ion with one type of isotope is: ", paste(paste(omittedFragementIon, omittedFragementIonIsotope, sep='-'), collapse = ","), '.', sep="")
-                } else if (length(omittedFragementIon) > 1) {
-                    errorReason <- paste(errorReasonTmp, "The other fragment ions with one type of isotope are: ", paste(paste(omittedFragementIon, omittedFragementIonIsotope, sep='-'), collapse = ","), '.', sep="")
+                } else if (length(omittedFragmentIon) == 1) {
+                    errorReason <- paste(errorReasonTmp, "The other fragment ion with one type of isotope is: ", paste(paste(omittedFragmentIon, omittedFragmentIonIsotope, sep='-'), collapse = ","), '.', sep="")
+                } else if (length(omittedFragmentIon) > 1) {
+                    errorReason <- paste(errorReasonTmp, "The other fragment ions with one type of isotope are: ", paste(paste(omittedFragmentIon, omittedFragmentIonIsotope, sep='-'), collapse = ","), '.', sep="")
                 }
                 #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
                 errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
@@ -795,8 +795,11 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                             mxlabel <- "\nTheoretical Concentration (fmol/uL)\nEstimated from unpurified peptide"
                             mcolor <- "red"
                         }
+                        concentrationMax <- max(thisPeptide$Concentration)
+                        # 0.8/20 is a scaling factor
+                        geom_errorbar_width <- concentrationMax*(0.8/20)
                         CairoPNG(filename=paste(plot_output_dir, "\\", input_peptide_sequence, "_", myplotType, '_', indexLabel, '_ResponseCurveQuery.response_curve.png', sep=''), width=800, height=600, bg="white")
-                        p <- ggplot(data=thisPeptide, aes(x=Concentration, y=Median, color=FragmentIon)) + geom_errorbar(aes(ymin=Min, ymax=Max), width=.8) + geom_smooth(method=lm, se=FALSE) +geom_point(size=2) + xlab(mxlabel) + ylab("Peak Area Ratio") + theme(title=element_text(size=18, colour="black"), axis.text=element_text(size=16), axis.text.x=element_text(colour=mcolor), axis.title=element_text(size=20) , axis.title.x=element_text(colour=mcolor), legend.position = c(0.15, 0.85), legend.title = element_text(size=14), legend.text = element_text(size=14))+ labs(title=mTitle)+ scale_colour_discrete(name = "Transition")
+                        p <- ggplot(data=thisPeptide, aes(x=Concentration, y=Median, color=FragmentIon)) + geom_errorbar(aes(ymin=Min, ymax=Max), width=geom_errorbar_width) + geom_smooth(method=lm, se=FALSE) +geom_point(size=2) + xlab(mxlabel) + ylab("Peak Area Ratio") + theme(title=element_text(size=18, colour="black"), axis.text=element_text(size=16), axis.text.x=element_text(colour=mcolor), axis.title=element_text(size=20) , axis.title.x=element_text(colour=mcolor), legend.position = c(0.15, 0.85), legend.title = element_text(size=14), legend.text = element_text(size=14))+ labs(title=mTitle)+ scale_colour_discrete(name = "Transition")
                         print(p)
                         dev.off()
                         
@@ -811,18 +814,22 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                                           )
                             # Judge whether there are outliers among lm_data$Slope according to the coefficient of variance
                             cv_slope <- sd(lm_data$Slope)/mean(lm_data$Slope)
-                            if ((! is.na(cv_slope)) & (! is.infinite(cv_slope)) & (! is.na(cv_slope))) {
-                                if (cv_slope > cv_threshold) {
-                                    errorType <- "Warning"
-                                    errorSubtype <- "Bad linear regression fitting"
-                                    errorReason <- paste("The coefficient of variance of slopes of the fragment ions (", paste(unique(thisPeptide$FragmentIon), collapse=', '), ") is larger than ", cv_threshold, ".", sep= '')
-                                    #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
-                                    errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
-                                    cat(errorInfor)
-                                    cat('\n')
-                                } else {
-                                    invisible()
-                                }
+                            if (is.nan(cv_slope)) {
+                                errorType <- "Warning"
+                                errorSubtype <- "Bad linear regression fitting"
+                                errorReason <- paste("The slopes of the fragments ions (", paste(unique(thisPeptide$FragmentIon), collapse=', '), ") is(are) 0.", sep= '')
+                                #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
+                                errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
+                                cat(errorInfor)
+                                cat('\n')
+                            } else if (cv_slope > cv_threshold) {
+                                errorType <- "Warning"
+                                errorSubtype <- "Bad linear regression fitting"
+                                errorReason <- paste("The coefficient of variance of slopes of the fragment ions (", paste(unique(thisPeptide$FragmentIon), collapse=', '), ") is(are) larger than ", cv_threshold, ".", sep= '')
+                                #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
+                                errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
+                                cat(errorInfor)
+                                cat('\n')
                             } else {
                                 invisible()
                             }
@@ -832,7 +839,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                             if ( rSquareMin < rSquare_threshold || pValueMax > pValue_threshold) {
                                 errorType <- "Warning"
                                 errorSubtype <- "Bad linear regression fitting"
-                                errorReason <- "The quality of fit of linear model is poor due to R2 < 0.5 or  p > 0.05 in the significance test for linear regression."
+                                errorReason <- "The quality of fit of linear model is poor due to the low R2 or large p value of F-test in the process of linear regression."
                                 #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
                                 errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
                                 cat(errorInfor)
