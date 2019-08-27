@@ -150,6 +150,14 @@ detect_outliers <- function(x, na.rm = TRUE, ...) {
     y
 }
 
+set_order <- function(x) {
+    id <- which(x$FragmentIon == 'Sum')
+    x_tmp <- x[id, ]
+    x_new <- x[-id,]
+    x_new <- rbind(x_new, x_tmp)
+    x_new
+}
+
 identify_uniProtKB_entryID  <- function(x) {
     # This function is to extract uniProtKB_entryID from the protein name.
     if (grepl('\\|', x)) {
@@ -420,7 +428,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 TSum = ddply(df2, .(ProteinName, PeptideModifiedSequence, Concentration, SampleGroup, Replicate, ISSpike), summarize, Ratio = sum(lightArea, na.rm=TRUE)/sum(heavyArea, na.rm=TRUE), heavyArea=sum(heavyArea, na.rm=TRUE), lightArea=sum(lightArea, na.rm=TRUE))
             }
             
-            TSum$FragmentIon <- "SUM"
+            TSum$FragmentIon <- "Sum.tr"
             TSum$PrecursorCharge <- ""
             TSum$ProductCharge <- ""
             
@@ -434,16 +442,6 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 df2$MeasuredConcentration <- df2$Ratio * df2$ISSpike
             }
 
-            # Set the PrecursorCharge of the SUM in df2.
-            precursorChargeSet <- c()
-            for (precursorChargeTmp in unique(df2$PrecursorCharge)) {
-              if (precursorChargeTmp != '') {
-                precursorChargeSet <- c(precursorChargeSet, precursorChargeTmp) 
-              }
-            }
-            precursorChargeSet <- precursorChargeSet[1]
-            df2[df2$FragmentIon == 'SUM', ]$PrecursorCharge <- precursorChargeSet
-            
             curveDataIndex <- with(df2,  order(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, Replicate))
             thisPeptide <- df2[curveDataIndex,]
             thisPeptide$PrecursorCharge <- substr(thisPeptide$PrecursorCharge,1,1)
@@ -452,6 +450,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
             
             # Calculate LOD/LOQ. This part is omitted.
             thisPeptide$FragmentIon <- paste(thisPeptide$PrecursorCharge, thisPeptide$FragmentIon, thisPeptide$ProductCharge, sep=".") 
+            thisPeptide[thisPeptide$FragmentIon == ".Sum.tr.", ]$FragmentIon <- "Sum"
             # Keep the fragment ions in keptFragmentIon
             result= ddply(df2, .(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, SampleGroup), 
                 summarize, MedianR=median(Ratio, na.rm= TRUE), MinR = min(Ratio, na.rm=TRUE), MaxR=max(Ratio, na.rm=TRUE), CVR=sd(Ratio, na.rm= TRUE)/mean(Ratio, na.rm= TRUE), MedianMeasuredC=median(MeasuredConcentration, na.rm= TRUE), SDMeasuredC=sd(MeasuredConcentration, na.rm= TRUE), MinMeasuredC=min(MeasuredConcentration, na.rm= TRUE), MaxMeasuredC=max(MeasuredConcentration, na.rm= TRUE))
@@ -913,7 +912,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     TSum = ddply(df2, .(ProteinName, PeptideModifiedSequence, Concentration, SampleGroup, Replicate, ISSpike), summarize, Ratio = sum(lightArea, na.rm=TRUE)/sum(heavyArea, na.rm=TRUE), heavyArea=sum(heavyArea, na.rm=TRUE), lightArea=sum(lightArea, na.rm=TRUE))
                 }
                 
-                TSum$FragmentIon <- "SUM"
+                TSum$FragmentIon <- "Sum.tr"
                 TSum$PrecursorCharge <- ""
                 TSum$ProductCharge <- ""
                 
@@ -935,16 +934,6 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     df2$MeasuredConcentration <- df2$Ratio * df2$ISSpike
                 }
 
-                # Set the PrecursorCharge of the SUM in df2.
-                precursorChargeSet <- c()
-                for (precursorChargeTmp in unique(df2$PrecursorCharge)) {
-                  if (precursorChargeTmp != '') {
-                    precursorChargeSet <- c(precursorChargeSet, precursorChargeTmp) 
-                  }
-                }
-                precursorChargeSet <- precursorChargeSet[1]
-                df2[df2$FragmentIon == 'SUM', ]$PrecursorCharge <- precursorChargeSet
-                
                 curveDataIndex <- with(df2,  order(ProteinName, PeptideModifiedSequence, PrecursorCharge, FragmentIon, ProductCharge, Concentration, Replicate))
                 thisPeptide <- df2[curveDataIndex,]
                 thisPeptide$PrecursorCharge <- substr(thisPeptide$PrecursorCharge,1,1)
@@ -954,8 +943,8 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 if (plot_output) {
                     # Calculate LOD/LOQ
                     thisPeptide$FragmentIon <- paste(thisPeptide$PrecursorCharge, thisPeptide$FragmentIon, thisPeptide$ProductCharge, sep=".") 
+                    thisPeptide[thisPeptide$FragmentIon == ".Sum.tr.", ]$FragmentIon <- "Sum"
                     # Keep the fragment ions in keptFragmentIon
-                    
                     lowConc <- sort(unique(thisPeptide$Concentration[thisPeptide$Concentration>0]))[1]
                     usedData <- thisPeptide[,c("FragmentIon", "Concentration", "Replicate", "Ratio")]
                     usedData <- usedData[(usedData$Concentration == 0 | usedData$Concentration == lowConc ), ]
@@ -1021,7 +1010,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     uniquePeptide <- unique(thisPeptide$PeptideModifiedSequence)
                     
                     thisPeptide$FragmentIon <- paste(thisPeptide$PrecursorCharge, thisPeptide$FragmentIon, thisPeptide$ProductCharge, sep=".")
-   
+                    thisPeptide[thisPeptide$FragmentIon == ".Sum.tr.", ]$FragmentIon <- "Sum"
                     samePeptideLength <- dim(thisPeptide)[1]
                     mProtein <- unlist(strsplit(as.character(thisPeptide$ProteinName[1]),"[.]"))[1]
                     #mTitle <- paste("Analyte: ", mProtein, ".", uniquePeptide[1], "\n", sep="")
@@ -1094,13 +1083,15 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     #LODTable <- LODTable[LODTable$FragmentIon %in% keptFragmentIon, ]
                     
                     # Write tables
-                    write.table(format(fitR, digits=3), file = paste(plot_output_dir, "\\", input_peptide_sequence, '_', indexLabel, '_ResponseCurveAnalysis.fitTable.tsv', sep=''), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
+                    fitR_ordered <- set_order(fitR)
+                    write.table(format(fitR_ordered, digits=3), file = paste(plot_output_dir, "\\", input_peptide_sequence, '_', indexLabel, '_ResponseCurveAnalysis.fitTable.tsv', sep=''), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
                     #write.csv(format(fitR, digits=3), file=paste(plot_output_dir, "\\", input_peptide_sequence, '_ResponseCurveAnalysis.fitTable.csv', sep=''), row.names=FALSE, quote=FALSE)
                     
                     mergeTable <- merge(LODTable, fitR, by="FragmentIon", all=T)
                     mergeTable[,2:7] <-  (mergeTable[,2:7] - mergeTable[,9])  /(mergeTable[,8])
                     mergeTable <- mergeTable[,c(1,2,4,6,3,5,7)]
-                    write.table(format(mergeTable, digits=3), file = paste(plot_output_dir, "\\", input_peptide_sequence, '_', indexLabel, '_ResponseCurveAnalysis.LODCTable.tsv', sep=''), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)   
+                    mergeTable_ordered <- set_order(mergeTable)
+                    write.table(format(mergeTable_ordered, digits=3), file = paste(plot_output_dir, "\\", input_peptide_sequence, '_', indexLabel, '_ResponseCurveAnalysis.LODCTable.tsv', sep=''), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)   
                     #write.csv(format(mergeTable[,1:7], digits=3), file=paste(plot_output_dir, "\\", input_peptide_sequence, '_ResponseCurveAnalysis.LODCTable.csv', sep=''), row.names=FALSE, quote=FALSE)
                 }
             }
