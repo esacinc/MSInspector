@@ -64,7 +64,7 @@ def check_missing(listToCheck):
 
 def locate_missing(valueList, colNameList, match, waived_list):
 	outList = [colNameList[index] for index, value in enumerate(valueList) if (value in match) and (index not in waived_list)]
-	return "Error", "Attribute", "Essential attribute(s) has(have) missing values, including "+'; '.join(outList)+'.'
+	return "Error", "Attribute", "Essential attribute(s) has (have) missing values, including "+'; '.join(outList)+'.'
 
 def identify_uniProtKB_entryID(proteinName):
 # This function is to extract uniProtKB_entryID from the protein name.
@@ -188,7 +188,7 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_
 							columnsWithIssue.append('ISSpike or PeptideConcentrationIS')
 						if concentrationStatus and (peptideConcentrationStatus or multiplicationFactorStatus):
 							columnsWithIssue.append('Concentration or PeptideConcentration and MultiplicationFactor')
-						issueReason = "Essential attribute(s) has(have) missing values, including "+'; '.join(columnsWithIssue)+'.'
+						issueReason = "Essential attribute(s) has (have) missing values, including "+'; '.join(columnsWithIssue)+'.'
 						errorDfTmp.loc[len(errorDfTmp)] = [skyDocumentName, issueType, issueSubtype, issueReason, proteinName, peptideSeq, '', precursorCharge] + ['']*(errorDfTmp.shape[1]-8)
 						errorDf = pd.concat([errorDf, errorDfTmp],  ignore_index=True)
 						# Deduplicate the 'PeptideModifiedSequence' with the PrecursorCharge
@@ -216,7 +216,7 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_
 					issueType = "Error"
 					issueSubtype = "Attribute"
 					proteinName = dfTmp2_2['ProteinName'].tolist()[0]
-					issueReason = "Essential attribute(s) has(have) unqualified data types: " + '; '.join(col_with_wrong_dataType_list)+'.'
+					issueReason = "Essential attribute(s) has (have) unqualified data types: " + '; '.join(col_with_wrong_dataType_list)+'.'
 					errorDfTmp.loc[len(errorDfTmp)] = [skyDocumentName, issueType, issueSubtype, issueReason, proteinName, peptideSeq, '', precursorCharge] + ['']*(errorDfTmp.shape[1]-8)
 					errorDf = pd.concat([errorDf, errorDfTmp],  ignore_index=True)
 					# Deduplicate the 'PeptideModifiedSequence' with the PrecursorCharge
