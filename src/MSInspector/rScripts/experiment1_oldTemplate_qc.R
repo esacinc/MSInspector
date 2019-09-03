@@ -838,7 +838,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                             if ( rSquareMin < rSquare_threshold || pValueMax > pValue_threshold) {
                                 errorType <- "Warning"
                                 errorSubtype <- "Bad linear regression fitting"
-                                errorReason <- "The quality of fit of linear model is poor due to the low R2 or large p value of F-test in the process of linear regression."
+                                errorReason <- paste("The quality of fit of linear model is poor due to R2 < ", rSquare_threshold, " or p > ", pValue_threshold, " in the significance test for linear regression.", sep='')
                                 #errorInfor <- paste(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', '', '', '', '', '', '', '', '', '', '', '', '', '',sep='\t')
                                 errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
                                 cat(errorInfor)
