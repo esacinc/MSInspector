@@ -928,7 +928,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     # Capture the situation where no points are observed at specific day.
                     daysTmp <- setdiff(days,plot_days)
                     if (length(daysTmp) > 0) {
-                        errorReason_tmp <- paste("For fragment ion ", current_plot_ion, ", there is no point on day ",  paste(daysTmp, collapse = ', '), sep="")
+                        errorReason_tmp <- paste("For fragment ion ", current_plot_ion, ", there are no points on day ",  paste(daysTmp, collapse = ', '), sep="")
                         errorReason_missing_point_on_day <- c(errorReason_missing_point_on_day, errorReason_tmp)
                     }
 
