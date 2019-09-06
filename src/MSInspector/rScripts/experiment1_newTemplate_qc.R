@@ -794,9 +794,10 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                             mxlabel <- "\nTheoretical Concentration (fmol/uL)\nEstimated from unpurified peptide"
                             mcolor <- "red"
                         }
-                        concentrationMax <- max(thisPeptide$Concentration)
-                        # 0.8/20 is a scaling factor
-                        geom_errorbar_width <- concentrationMax*(0.8/20)
+                        # Define the scaling factor for geom_errorbar
+                        xScope <- max(thisPeptide$Concentration)-min(thisPeptide$Concentration)
+                        scaling_factor1 <- xScope/(20-0.002)
+                        geom_errorbar_width <- 0.8*scaling_factor1
                         CairoPNG(filename=paste(plot_output_dir, "\\", input_peptide_sequence, "_", myplotType, '_', indexLabel, '_ResponseCurveQuery.response_curve.png', sep=''), width=800, height=600, bg="white")
                         p <- ggplot(data=thisPeptide, aes(x=Concentration, y=Median, color=FragmentIon)) + geom_errorbar(aes(ymin=Min, ymax=Max), width=geom_errorbar_width) + geom_smooth(method=lm, se=FALSE) +geom_point(size=2) + xlab(mxlabel) + ylab("Peak Area Ratio") + theme(title=element_text(size=18, colour="black"), axis.text=element_text(size=16), axis.text.x=element_text(colour=mcolor), axis.title=element_text(size=20) , axis.title.x=element_text(colour=mcolor), legend.position = c(0.15, 0.85), legend.title = element_text(size=14), legend.text = element_text(size=14))+ labs(title=mTitle)+ scale_colour_discrete(name = "Transition")
                         print(p)
@@ -852,12 +853,17 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                         if (tolower(mypeptideType) == "crude"){
                             mxlabel <- "\nLog Theoretical Concentration (fmol/uL)\nEstimated from unpurified peptide"
                             mcolor <- "red"
-                         }       
-                         CairoPNG(filename=paste(plot_output_dir, "\\", input_peptide_sequence, "_", myplotType, '_', indexLabel, '_ResponseCurveQuery.response_curve.png', sep=''), width=800, height=600, bg="white")
-                         pd <- position_dodge(.05)
-                         p <- ggplot(data=thisPeptide[thisPeptide$Concentration >0,], aes(x=log(Concentration,10), y=log(Median,10), color=FragmentIon)) + geom_errorbar(aes(ymin=log(Min,10), ymax=log(Max,10)), position=pd, width=.08) +geom_point(position=pd, size=2) + xlab(mxlabel) + ylab("Log Peak Area Ratio") + theme(title=element_text(size=18, colour="black"), axis.text=element_text(size=16),   axis.text.x=element_text(colour=mcolor), axis.title=element_text(size=20) , axis.title.x=element_text( colour=mcolor), legend.position = c(0.2, 0.85), legend.title = element_text(size=14), legend.text = element_text(size=14))+ labs(title=mTitle)+ scale_colour_discrete(name = "Transition")    
-                         print(p)
-                         dev.off()
+                        }       
+                        CairoPNG(filename=paste(plot_output_dir, "\\", input_peptide_sequence, "_", myplotType, '_', indexLabel, '_ResponseCurveQuery.response_curve.png', sep=''), width=800, height=600, bg="white")
+                        # Define the scaling factor for position_dodge and geom_errorbar
+                        logValues <- log(thisPeptide[thisPeptide$Concentration>0, ]$Concentration, 10)
+                        xScopeTmp <- max(logValues)-min(logValues)
+                        scaling_factor2 <- xScopeTmp/(log(20, 10)-log(0.002, 10))
+                        pd <- position_dodge(0.05*scaling_factor2)
+                        geom_errorbar_width_tmp <- 0.08*scaling_factor2
+                        p <- ggplot(data=thisPeptide[thisPeptide$Concentration >0,], aes(x=log(Concentration,10), y=log(Median,10), color=FragmentIon)) + geom_errorbar(aes(ymin=log(Min,10), ymax=log(Max,10)), position=pd, width=geom_errorbar_width_tmp) +geom_point(position=pd, size=2) + xlab(mxlabel) + ylab("Log Peak Area Ratio") + theme(title=element_text(size=18, colour="black"), axis.text=element_text(size=16),   axis.text.x=element_text(colour=mcolor), axis.title=element_text(size=20) , axis.title.x=element_text( colour=mcolor), legend.position = c(0.2, 0.85), legend.title = element_text(size=14), legend.text = element_text(size=14))+ labs(title=mTitle)+ scale_colour_discrete(name = "Transition")    
+                        print(p)
+                        dev.off()
                     }
                     if ( tolower(myplotType) == "residual"){
                         mxlabel <- "\nLog Theoretical Concentration (fmol/uL)"
