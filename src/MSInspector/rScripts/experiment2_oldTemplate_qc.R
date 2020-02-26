@@ -255,13 +255,13 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 # Make judgement whether there are multiple heavy or light area for the combination of fragment_ion, replicate, concentration(day) and sample_group.
                 # If it happens, traverse fragment_ion_list, days, sample_groups and replicates to evaluate the fragment_ion under the specific combination of day, sample_group, and replicate.
                 # The reason to this error is that the annotation of column 
-                evaOut1 <- evaluate("dcast(QC_setTmp, protein_name + peptide + precursor_charge + fragment_ion + replicate + concentration + sample_group ~ isotope_label_types, value.var='area')")
-                evaOut2 <- evaluate("dcast(QC_setTmp, protein_name + peptide + precursor_charge + fragment_ion + replicate_name + concentration + sample_group ~ isotope_label_types, value.var='area')")
+                evaOut1 <- evaluate("dcast(QC_setTmp, protein_name + peptide + precursor_charge + fragment_ion + replicate + concentration + sample_group ~ isotope_label_type, value.var='area')")
+                evaOut2 <- evaluate("dcast(QC_setTmp, protein_name + peptide + precursor_charge + fragment_ion + replicate_name + concentration + sample_group ~ isotope_label_type, value.var='area')")
                 
                 if (length(evaOut1) == 3) {
                     # In this condition, some replicate information is wrong for some combinations of fragment_ion, concentration and sample_group.
                     # The wrongly annotated replicate need to be generated.
-                    df1 <- suppressMessages(dcast(QC_setTmp, protein_name + peptide + precursor_charge + fragment_ion + replicate + concentration + sample_group ~ isotope_label_types, value.var='area'))
+                    df1 <- suppressMessages(dcast(QC_setTmp, protein_name + peptide + precursor_charge + fragment_ion + replicate + concentration + sample_group ~ isotope_label_type, value.var='area'))
                     # Evaluate the fragment_ion under the specific combination of day, sample_group, and replicate.
                     # df1 can be used to extract the combinations
                     errorReasonTmp <- c()
