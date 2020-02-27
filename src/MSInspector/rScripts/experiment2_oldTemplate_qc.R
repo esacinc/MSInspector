@@ -323,6 +323,11 @@ if (plot_output) {
     write.table(logdf, file=log_filename, row.names=FALSE, col.names=TRUE, quote=FALSE, sep='\t')
 }
 
+df_skydoc_error_peptide_precursorCharge$SkyDocumentName <-  as.character(df_skydoc_error_peptide_precursorCharge$SkyDocumentName)
+df_skydoc_error_peptide_precursorCharge$protein_name <-  as.character(df_skydoc_error_peptide_precursorCharge$protein_name)
+df_skydoc_error_peptide_precursorCharge$peptide <-  as.character(df_skydoc_error_peptide_precursorCharge$peptide)
+df_skydoc_error_peptide_precursorCharge$precursorCharge <- as.character(df_skydoc_error_peptide_precursorCharge$precursorCharge)
+
 # Infer the internal standard type for each SkyDocumentName by randomly sampled 5 peptides.
 if (FALSE) {
     df_internal_standard_inferred <- data.frame(SkyDocumentName=as.character(), internal_standard=as.character())
