@@ -9,8 +9,6 @@ Experiment 3, selectivity (or Selectivity)<br />
 Experiment 4, stability (Stability)<br />
 Experiment 5, reproducible detection of endogenous analyte (Endogenous)<br />
 
-The current version supports Experiment 1 and Experiment 2 in the old and new templates.
-
 The work flow of MSInspector is shown [here](https://github.com/esacinc/MSInspector/tree/master/src/MSInspector/doc/workflow.pdf).
 
 A report file (QC_report.html) will be generated which will capture the details of errors and warnings when 
@@ -76,6 +74,11 @@ Changelog
 2019-06-13 Add a function to QA the experiment type from the input parameter.<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Add a function to QA the data type of several required attributes.<br />
 2019-06-26 Fix the bug caused by the space in the directory of the input parameters.<br />
+2019-07-18 Add a function to capture the error caused by wrong annotation of IS Spike for experiment 1.<br />
+2019-08-22 Fix the issue of the variable width of the horizontal lines in Response Curve for the experiment 1.<br />
+2019-12-03 Add errors and warnings detecting function to experiment 3.<br />
+2020-01-17 Add errors and warnings detecting function to experiment 4.<br />
+2020-03-19 Add errors and warnings detecting function to experiment 5.<br />
 
 Citation
 --------
