@@ -74,7 +74,7 @@ def main():
 					'exp2':{'old':['Area'],
 						    'new':['Area']},
 					'exp3':['Area'],
-					'exp4':['Area'],
+					'exp4':['Area', 'Time', 'TimeUnits'],
 					'exp5':['Area'],
 					}
 	
