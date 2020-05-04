@@ -99,7 +99,7 @@ plot_output_dir <- args[4]
 #dataset_path <- "normal_data.tsv"
 #fileList_path <- "file_namelist_IS.tsv"
 #plot_output <- "True"
-#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\data\\CPTAC_TEST_Experiment_ALL_TEST_old_template\\ValidationSamples\\exp2.2019-04-11_11-57-54\\figures_tables.tmp"
+#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\qcAssayPortal\\src\\qcAssayPortal\\rScripts\\test\\cv_cutoof_exp2\\tmp"
 
 
 
@@ -111,6 +111,7 @@ if (plot_output == 'True') {
 
 cv_threshold_all <- 60.0
 cv_threshold_individual <- 40.0
+cv_threshold <- 20.0
 
 
 # Load data from local table
@@ -383,6 +384,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     sample_groups <- sort(unique(QC_set[ , 'sample_group']))
                     replicates <- sort(unique(QC_set[ , 'replicate']))
                     isotope_label_types <- unique(QC_set[ , 'isotope_label_type'])
+                    QC_set$isotope_label_type[QC_set$isotope_label_type == "medium"] <- "light"
                     
                     fragment_ion_results <- data.frame()
                     for (current_ion in fragment_ion_list) {
@@ -657,6 +659,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 sample_groups <- sort(unique(QC_set[ , 'sample_group']))
                 replicates <- sort(unique(QC_set[ , 'replicate']))
                 isotope_label_types <- unique(QC_set[ , 'isotope_label_type'])
+                QC_set$isotope_label_type[QC_set$isotope_label_type == "medium"] <- "light"
                 
                 # capture the warning caused by the number of fragment ions 
                 if (length(fragment_ion_list) < 3) {
@@ -910,17 +913,30 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 if (length(ions) <= 4 ) {
                     results_to_plot <- CV_results[CV_results$fragment_ion!='sum' & !is.na(CV_results$low_total_CV) & !is.na(CV_results$med_total_CV) & !is.na(CV_results$high_total_CV) , ]
                     ions_list <- as.character(results_to_plot[ , 'fragment_ion'])
-                    ions_to_plot <- c(ions_list, 'sum')
+                    results_to_plot2 <- CV_results[CV_results$fragment_ion=='sum' & !is.na(CV_results$low_total_CV) & !is.na(CV_results$med_total_CV) & !is.na(CV_results$high_total_CV) , ]
+                    ions_to_plot <- c(ions_list, as.character(results_to_plot2[ , 'fragment_ion']))
                     ions_in_table <- ions_to_plot
                 } else {
                     results_to_plot <- CV_results[CV_results$fragment_ion!='sum' & !is.na(CV_results$low_total_CV) & !is.na(CV_results$med_total_CV) & !is.na(CV_results$high_total_CV) , ]
+                    ions_list <- as.character(results_to_plot[ , 'fragment_ion'])
                     # new sort to get Top 3 plots
                     results_to_plot <- results_to_plot[order(results_to_plot$med_total_CV, results_to_plot$low_total_CV, results_to_plot$high_total_CV), ]
                     three_lowest_med_total_CV <- head(results_to_plot, 3)
                     three_lowest_ions <- as.character(three_lowest_med_total_CV[ , 'fragment_ion'])
-                    ions_list <- as.character(results_to_plot[ , 'fragment_ion'])
-                    ions_to_plot  <- c(three_lowest_ions, 'sum')
-                    ions_in_table <- c(ions_list, 'sum')
+                    results_to_plot2 <- CV_results[CV_results$fragment_ion=='sum' & !is.na(CV_results$low_total_CV) & !is.na(CV_results$med_total_CV) & !is.na(CV_results$high_total_CV) , ]
+                    ions_to_plot  <- c(three_lowest_ions, as.character(results_to_plot2[ , 'fragment_ion']))
+                    ions_in_table <- c(ions_list, as.character(results_to_plot2[ , 'fragment_ion']))
+                }
+                
+                # Check wether ions_to_plot is blank or now. If it's blank, an error message will be thrown.
+                if (length(ions_to_plot) == 0) {
+                    errorType <- "Error"
+                    errorSubtype <- "Missing points"
+                    errorReason <- "In repeatability graph, there is no fragment ions and their CVs can't be caluclated."
+                    errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge), rep('', colNumber-5)), collapse='\t')
+                    cat(errorInfor)
+                    cat('\n')
+                    next
                 }
                 
                 errorReason_missing_point_on_day <- c()
@@ -1015,7 +1031,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 # For individual ions, med_total_CV and high_total_CV will be used to compared with cv_threshold_individual
                 CV_results_sub_individual <- CV_results_sub_individual[, -c(1, 2)]
 
-                if (curve_type=='reverse') {
+                if (FALSE) {
                     if (any(CV_results_sub_all > cv_threshold_all) | any(CV_results_sub_individual > cv_threshold_individual)) {
                         index_all_array <- which(CV_results_sub_all > cv_threshold_all)
                         index_individual_array <- which(matrix(CV_results_sub_individual > cv_threshold_individual, ncol=ncol(CV_results_sub_individual)), arr.ind=TRUE)
@@ -1061,6 +1077,61 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                         cat(errorInfor)
                         cat('\n')
                     }
+                }
+                CV_results_sub_2 <- subset(CV_results_sorted, select = c(fragment_ion, low_intra_CV, med_intra_CV, high_intra_CV, low_inter_CV, med_inter_CV, high_inter_CV, low_total_CV, med_total_CV, high_total_CV))
+                CV_results_sub_2_plot <- CV_results_sub_2[CV_results_sub_2$fragment_ion  %in% ions_to_plot, ]
+                rownames(CV_results_sub_2_plot) <- CV_results_sub_2_plot$fragment_ion
+                CV_results_sub_2_plot <- CV_results_sub_2_plot[,-c(1)]
+                if (any(CV_results_sub_2_plot > cv_threshold)) {
+                    index_individual_array <- which(matrix(CV_results_sub_2_plot > cv_threshold, ncol=ncol(CV_results_sub_2_plot)), arr.ind=TRUE)
+                    # if index_individual_array is 1*2 matrix, index_individual_array shouldn't be ordered by the first column.
+                    if (length(index_individual_array) == 2) {
+                        index_individual_row <- unique(index_individual_array[,1])
+                    } else {
+                        index_individual_array <- index_individual_array[order(index_individual_array[,1]), ]
+                        index_individual_row <- unique(index_individual_array[,1])
+                    }
+                    errorReason_tmp <- c()
+                    for (index_tmp in index_individual_row) {
+                        fragment_ion_selected <- rownames(CV_results_sub_2_plot)[index_tmp]
+                        fragment_ion_selected_id <- which(rownames(CV_results_sub_2_plot)==fragment_ion_selected)
+                        index1_array <- index_individual_array[, 2][index_individual_array[,1]== index_tmp]
+                        intra_assay_abonormal <- c()
+                        inter_assay_abonormal <- c()
+                        total_abnormal <- c()
+                        for (index1 in index1_array) {
+                            strsplit_tmp <- strsplit(colnames(CV_results_sub_2_plot)[index1], split='_')[[1]]
+                            concentraion_term <- strsplit_tmp[1]
+                            cv_type_term <- strsplit_tmp[2]
+                            if (cv_type_term == "intra") {
+                                intra_assay_abonormal <- c(intra_assay_abonormal, concentraion_term)
+                            } else if (cv_type_term == "inter") {
+                                inter_assay_abonormal <- c(inter_assay_abonormal, concentraion_term)
+                            } else {
+                                total_abnormal <- c(total_abnormal, concentraion_term)
+                            }
+                        }
+                        errorReason_message <- paste('For fragment ion ', fragment_ion_selected, ',', sep='')
+                        if (length(intra_assay_abonormal) > 0) {
+                            errorReason_message_tmp <- paste(' intra_assay CV of concentration(s) of ', paste(intra_assay_abonormal, collapse=', '), ' is(are) larger than the threshold of ', cv_threshold, '%', sep='')
+                            errorReason_message <- paste(errorReason_message, errorReason_message_tmp, ',', sep='')
+                        }
+                        if (length(inter_assay_abonormal) > 0) {
+                            errorReason_message_tmp <- paste(' inter_assay CV of concentration(s) of ', paste(inter_assay_abonormal, collapse=', '), ' is(are) larger than the threshold of ', cv_threshold, '%',  sep='')
+                            errorReason_message <- paste(errorReason_message, errorReason_message_tmp, ',', sep='')
+                        }
+                        if (length(total_abnormal) > 0) {
+                            errorReason_message_tmp <- paste(' total CV of concentration(s) of ', paste(total_abnormal, collapse=', '), ' is(are) larger than the threshold of ', cv_threshold, '%',  sep='')
+                            errorReason_message <- paste(errorReason_message, errorReason_message_tmp, '.', sep='')
+                        }
+                        errorReason_tmp <- c(errorReason_tmp, errorReason_message)
+                    }
+                    errorType <- "Warning"
+                    errorSubtype <- "Bad distribution of points"
+                    errorReason <- paste(errorReason_tmp, collapse =" ")
+                    errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge), rep('', colNumber-5)), collapse='\t')
+                    cat(errorInfor)
+                    cat('\n')
                 }
             }
         }

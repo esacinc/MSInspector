@@ -329,6 +329,22 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 next
             }
             
+            isotope_label_types <- unique(labkey.data$isotopelabel)
+            # *** for medium labeled peptides ***
+            if(('light' %in% isotope_label_types) & ('medium' %in% isotope_label_types)) {
+                errorType <- "Error"
+                errorSubtype <- "Light and Medium isotope"
+                errorReason <- "Both light and medium isotope labels found in the peptide."
+                errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
+                cat(errorInfor)
+                cat('\n')
+                peptide_list_with_error <- c(peptide_list_with_error, input_peptide_sequence)
+                peptide_list_with_error2 <- c(peptide_list_with_error2, input_peptide_sequence)
+                next
+            } else {
+                labkey.data$isotopelabel[labkey.data$isotopelabel == "medium"] <- "light"
+            }
+            
             #if (is.na(labkey.data$isspike[1])){
             #    labkey.data$isspike <- labkey.data$peptideconcentrationis
             #}
@@ -553,6 +569,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     labkey.data$concentration <- labkey.data$concentration * labkey.data$multiplicationfactor
                 }
                 
+                labkey.data$isotopelabel[labkey.data$isotopelabel == "medium"] <- "light"
                 #if (is.na(labkey.data$isspike[1])){
                 #   labkey.data$isspike <- labkey.data$peptideconcentrationis
                 #}
@@ -676,6 +693,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 labkey.data$concentration <- labkey.data$concentration * labkey.data$multiplicationfactor
             }
             
+            labkey.data$isotopelabel[labkey.data$isotopelabel == "medium"] <- "light"
             #if (is.na(labkey.data$isspike[1])){
             #    labkey.data$isspike <- labkey.data$peptideconcentrationis
             #}
