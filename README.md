@@ -34,14 +34,14 @@ MSInspector is implemented as a Python program running on a Windows platform tha
 
 It has the following dependencies:
 * For the Python (v2.7.\*) programming language: requires Python-related libraries, including pandas(>= v0.21.0) and Jinja2(v2.9.6). <br /><br />
-* For the R (v3.5.\* is recommended) programming language: requires R-related libraries, including Cairo, evaluate, stringr, plyr, MASS, ggplot2, reshape2 and dplyr. In order to install required libraries, please run `install.packages(c("Cairo", "evaluate", "stringr", "plyr", "MASS", "ggplot2", "reshape2", "dplyr"))` in the R console. <br /><br />
+* For the R (v3.5.\* is recommended) programming language: requires R-related libraries, including Cairo, evaluate, stringr, plyr, MASS, ggplot2, reshape2 and dplyr. In the R console, in order to install required libraries, please run `install.packages(c("Cairo", "evaluate", "stringr", "plyr", "MASS", "ggplot2", "reshape2", "dplyr"))`. Then, check the installed ggplot2 version by running: `packageVersion("ggplot2")`. If the version is >= 3.3.0, uninstall ggplot2 by running: `remove.packages("ggplot2")`, then install ggplot2 version 3.1.0 by running: `install.packages("http://cran.r-project.org/src/contrib/Archive/ggplot2/ggplot2_3.1.0.tar.gz", repos = NULL, type = "source")`.<br /><br />
 * For Skyline (v4.2 is recommended): requires pre-installed Skyline command-line interface https://skyline.ms/_webdav/home/software/Skyline/@files/docs/Skyline%20Command-Line%20Interface-3_7.pdf. Or install Skyline administrator downloaded from https://skyline.ms/wiki/home/software/Skyline/page.view?name=install-administator-64. The command-line toolSkylineCmd.exe can be found in the installation directory. <br />
 
 MSInspector can be installed from the source code by pip:<br />
 1) Download MSInspector source code from URL and unzip the zipped file folder.<br />
 2) If the package of wheel is not installed, run `pip install wheel` to install it.<br />
 3) Change the directory to MSInspector's directory and run `python setup.py bdist_wheel` to build a wheel file for the subsequent installation via pip.<br />
-4) Run `pip install .\dist\MSInspector-1.1-py2-none-any.whl` to install MSInspector.<br />
+4) Run `pip install .\dist\MSInspector-1.2-py2-none-any.whl` to install MSInspector.<br />
 
 
 How to use it
