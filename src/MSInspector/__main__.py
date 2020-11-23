@@ -18,9 +18,17 @@ import shutil
 import warnings
 from distutils.spawn import find_executable
 from zipfile import ZipFile
-import pandas as pd
 import subprocess
-import jinja2
+try:
+	import pandas as pd
+except ImportError:
+    print 'The package named pandas is mising. Please refer to the tutorial to install it.'
+    sys.exit(1)
+try:
+	import jinja2
+except ImportError:
+    print 'The package named Jinja2 is mising. Please refer to the tutorial to install it.'
+    sys.exit(1)
 
 from MSInspector.utils.parseArgument import *
 from MSInspector.utils.qcAnalysis import *
@@ -182,7 +190,8 @@ def main():
 	skyzip_file_dir_basename_list = []
 	for item in skyzip_file_dir_list:
 		subitem = os.path.basename(item)
-		if subitem[:-8].split('_') >= 2:
+		#if subitem[:-8].split('_') >= 2:
+		if len(subitem[:-8].split('_')) >= 2:
 			listTmp = [subitem3 for subitem2 in subitem[:-8].split('_')[-2:] for subitem3 in subitem2.split('-')]
 			if all(subitem4.isdigit() for subitem4 in listTmp):
 				skyzip_file_dir_basename_list.append('_'.join(subitem[:-8].split('_')[:-2])+'_*_*.sky.zip')
@@ -211,7 +220,7 @@ def main():
 	time1 = time.time()
 	skyTsvDirList = []
 	skyFileDirList = []
-	pandasList = []
+	#pandasList = []
 	fileNameList = []
 	fileNameSkylineTmpTypeDic = {}
 	fileNameEmptyStatusDic = {}
@@ -354,6 +363,16 @@ def main():
 	# Step 3.1: Parse peptide_infor_file and add the data into assayFileList and assayInforDic
 	peptide_infor_parse(outf3, peptide_infor_file, outf5, assayFileList, assayInforDic, peptideTrackDic, peptideSeqChargeIsotopeDic, experiment_type)
 	# Step 3.2: Parse QC_report.tsv and add the data into assayInforDic
+	# Normally if the R script comes across errors, the function of qc_report_infor_parse will come across IOError
+	"""
+	try:
+		qc_report_infor_parse(outf1, is_inferred_file, assayInforDic, peptideTrackDic, peptideOutputDic, assayFileList, experiment_type)
+	except Exception, e:
+		print e
+		print '\n'
+		print "Errors happen when executing the R script. You can: 1) Check the compatibility of the installed R packages in R console by referring to the tutorial; 2) If there is no problem in 1), it means that some undefined errors in the Skyline document exist and please contact Yin Lu through yin.lu@eascinc.com to report the issue."
+		sys.exit(1)
+	"""
 	qc_report_infor_parse(outf1, is_inferred_file, assayInforDic, peptideTrackDic, peptideOutputDic, assayFileList, experiment_type)
 	# For each key in peptideSeqDisplay, assign an unique anchor id
 	id = 0
@@ -412,6 +431,10 @@ def main():
 	outf4 = os.path.join(outputdir, 'QC_report.html') 
 	with open(outf4, 'w') as handle:
 		handle.write(html_rendered)
+	
+	# Step 3.4: Output a csv file which contains the tables for all the peptides. The tables should be like what appear on the assay portal detail pages for each experiment.
+	outf6 = os.path.join(outputdir, 'statistical_tables_on_Assay_Portal.csv')
+	output_statistical_tables(peptide_infor_file, plot_output_dir, outf6, experiment_type)
 	time3 = time.time()
 	print "It takes %.2fsec."%(time3-time2)
 	
