@@ -52,10 +52,10 @@ How to use it
     Usage: MSInspector [-h] [<args>]
 
     Example 1:
-    MSInspector -ps "C:\Program Files\SkylineDailyRunner\SkylineDailyRunner.exe" -pr "C:\Program Files\R\R-3.3.1\bin\Rscript.exe" -i "D:\Skyline_analysis\MSInspector\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp1?0309_MouseV2B1.5_refined_2018-07-03_14-59-18.sky.zip" -e exp1 -t "D:\Skyline_analysis\MSInspector\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp1\meta_data.tsv"
+    MSInspector -ps "C:\Program Files\SkylineDailyRunner\SkylineDailyRunner.exe" -pr "C:\Program Files\R\R-3.5.2\bin\Rscript.exe" -i "D:\Skyline_analysis\MSInspector\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp1?0309_MouseV2B1.5_refined_2018-07-03_14-59-18.sky.zip" -e exp1 -t "D:\Skyline_analysis\MSInspector\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp1\meta_data.tsv"
     
     Example 2:
-    MSInspector -ps "C:\Program Files\Skyline\SkylineCmd.exe" -pr "C:\Program Files\R\R-3.3.1\bin\Rscript.exe" -i "D:\Skyline_analysis\MSInspector\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp2" -e exp2
+    MSInspector -ps "C:\Program Files\Skyline\SkylineCmd.exe" -pr "C:\Program Files\R\R-3.5.2\bin\Rscript.exe" -i "D:\Skyline_analysis\MSInspector\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp2" -e exp2
 
     optional arguments:
       -h, --help            show this help message and exit
