@@ -250,6 +250,7 @@ def peptide_infor_parse(is_infor_file, peptide_infor_file, peptide_excluded_in_R
 
 def qc_report_infor_parse(qc_report_file, is_inferred_file, assayInforDic, peptideTrackDic, peptideOutputDic, assayFileList, experiment_type):
 	dir_tmp = os.path.join(os.path.dirname(qc_report_file), 'figures_tables.tmp')
+	#print  os.path.isdir(dir_tmp)
 	file_list = os.listdir(dir_tmp)
 	#print file_list
 	qc_report_infor_df = pd.read_csv(qc_report_file, sep='\t', header=0, converters={i: str for i in range(0, 100)})
@@ -260,7 +261,16 @@ def qc_report_infor_parse(qc_report_file, is_inferred_file, assayInforDic, pepti
 		is_inferred_tmp = is_inferred_infor_df[is_inferred_infor_df['SkyDocumentName'] == item]['internal_standard'].iloc[0]
 		if not assayInforDic[item]['status']:
 			# It means that all of the peptides in this sky document have missing attribute issues which will cause errors.
-			assayInforDic[item]['isQuality'] = "Internal standard type can't be inferred. All the peptides have missing values or incorrect data types in some essential attributes."
+			if experiment_type in ['exp1', 'exp2']:
+				assayInforDic[item]['isQuality'] = "Internal standard type can't be inferred. All the peptides have missing values or incorrect data types in some essential attributes."
+			else:
+			# But for exp3, exp4 and exp5, the Internal standard type has to be heavy.
+				if "Internal standard" in qc_report_infor_df_tmp['IssueSubtype'].values and qc_report_infor_df_tmp['IssueType'].values[0] == 'Error':
+					# It means that Internal Standard has issues for this skyDocumentName
+					# It could be none or incorrect value
+					assayInforDic[item]['isQuality'] = qc_report_infor_df_tmp[qc_report_infor_df_tmp['IssueSubtype']=="Internal standard"]['IssueReason'].values[0]+' Errors happen for all the peptides.'
+				else:
+					assayInforDic[item]['isQuality'] = 'Correct'
 			assayInforDic[item]['peptideSeqErrors'] = peptideTrackDic[item]
 			assayInforDic[item]['peptideSeqWarnings'] = []
 			assayInforDic[item]['peptideSeqWithoutIssues'] = []
@@ -487,3 +497,133 @@ def qc_report_infor_parse(qc_report_file, is_inferred_file, assayInforDic, pepti
 		assayInforDic[item]['peptideWithErrors'] = countPeptide(assayInforDic[item]['peptideSeqErrors'])
 		assayInforDic[item]['peptideWithWarnings'] = countPeptide(assayInforDic[item]['peptideSeqWarnings'])
 		assayInforDic[item]['peptideWithoutIssues'] = countPeptide(assayInforDic[item]['peptideSeqWithoutIssues'])
+
+def locateTableV2(peptideSeq, precursorCharge, fileList, experiment_type, dirName):
+	if experiment_type == 'exp1':
+		pattern1 = re.compile(r"^%s_(.*)_ResponseCurveAnalysis.LODCTable.tsv$"%(string2escape(peptideSeq)))
+		pattern2 = re.compile(r"^%s_(.*)_ResponseCurveAnalysis.fitTable.tsv$"%(string2escape(peptideSeq)))
+		f1 = ''
+		f2 = ''
+		for fileTmp in fileList:
+			match = pattern1.match(fileTmp)
+			if match:
+				f1 = match.group()
+				break
+		for fileTmp in fileList:
+			match = pattern2.match(fileTmp)
+			if match:
+				f2 = match.group()
+				break
+		f1 = os.path.join(dirName, f1)
+		f2 = os.path.join(dirName, f2)
+		f1_status = False
+		f2_df_status = False
+		if os.path.isfile(f1):
+			f1_df = pd.read_csv(f1, sep='\t', header=0, converters={i: str for i in range(0, 100)})
+			f1_status = True
+		else:
+			f1_df = pd.DataFrame()
+		if os.path.isfile(f2):
+			f2_df = pd.read_csv(f2, sep='\t', header=0, converters={i: str for i in range(0, 100)})
+			f2_df_status = True
+		return([f1_status, f2_df_status], [f1, f2], [f1_df, f2_df])
+	if experiment_type == 'exp2' or experiment_type == 'exp3' or experiment_type == 'exp4' or experiment_type == 'exp5':
+		if experiment_type == 'exp3':
+			pattern1 = re.compile(r"^%s_%s_(.*)_summary_table.tsv$"%(string2escape(peptideSeq), string2escape(precursorCharge)))
+		else:
+			pattern1 = re.compile(r"^%s_%s_(.*)_CV_results.tsv$"%(string2escape(peptideSeq), string2escape(precursorCharge)))
+		f1 = ''
+		for fileTmp in fileList:
+			match = pattern1.match(fileTmp)
+			if match:
+				f1 = match.group()
+				break
+		f1 = os.path.join(dirName, f1)
+		f1_status = False
+		if os.path.isfile(f1):
+			f1_df = pd.read_csv(f1, sep='\t', header=0, converters={i: str for i in range(0, 100)})
+			f1_status = True
+		else:
+			f1_df = pd.DataFrame()
+		return ([f1_status], [f1], [f1_df])
+
+def output_statistical_tables(peptide_infor_file, plot_output_dir, outf6, experiment_type):
+	file_list = os.listdir(plot_output_dir)
+	peptide_infor_df = pd.read_csv(peptide_infor_file, sep='\t', header=0, converters={i: str for i in range(0, 100)})
+	assayFileList_tmp = []
+	with open(outf6, 'w') as out_tmp:
+		for item in peptide_infor_df.SkyDocumentName.unique():
+			out_tmp.write('Skyline Document Namme: '+item+'\n\n')
+			peptide_infor_df_tmp = peptide_infor_df[peptide_infor_df['SkyDocumentName'] == item]
+			if item not in assayFileList_tmp:
+				assayFileList_tmp.append(item)
+			#out_tmp.write('Skyline Document Namme: '+item+'\n')
+			for index, row in peptide_infor_df_tmp.iterrows():
+				peptideSeq = row['peptide']
+				precursorCharge = row['precursorCharge']
+				file_status, table_src_list, df_list = locateTableV2(peptideSeq, precursorCharge, file_list, experiment_type, plot_output_dir)
+				# The formats of the tables depend on the experiment type.
+				if experiment_type == 'exp1':
+					f1_df_status = file_status[0]
+					f2_df_status = file_status[1]
+					f1_df = df_list[0]
+					f2_df = df_list[1]
+					if f1_df_status or f2_df_status:
+						out_tmp.write(peptideSeq+'\n\n')
+					# Record LOD/LLOQ table orginated from f1_df
+					if f1_df_status:
+						out_tmp.write(','.join(['', 'LOD (fmol/ug)', '', '','LLOQ (fmol/ug)', '', ''])+'\n')
+						out_tmp.write(','.join(['Transition', 'blank only', 'blank+low-conc', 'rsd limit', 'blank only', 'blank+low-conc', 'rsd limit'])+'\n')
+						for index1, row1 in f1_df.iterrows():
+							out_tmp.write(','.join([row1['FragmentIon'], row1['blank_only_LOD'], row1['blank+low_conc_LOD'], row1['rsd_limit_LOD'], row1['blank_only_LOQ'], row1['blank+low_conc_LOQ'], row1['rsd_limit_LOQ']])+'\n')
+						out_tmp.write('\n')
+					# Record Curve Fit table orignated from f2_df
+					if f2_df_status:
+						out_tmp.write(','.join(['', 'Curve Fit', '', ''])+'\n')
+						out_tmp.write(','.join(['Transition', 'slope', 'intercept', 'r squared'])+'\n')
+						for index2, row2 in f2_df.iterrows():
+							out_tmp.write(','.join([row2['FragmentIon'], row2['Slope'], row2['Intercept'], row2['RSquare']])+'\n')
+						out_tmp.write('\n')
+				if experiment_type == 'exp2':
+					f1_df_status = file_status[0]
+					f1_df = df_list[0]
+					# Record CV table from f1_df
+					if f1_df_status:
+						out_tmp.write(peptideSeq+' precursor charge: '+precursorCharge+'\n\n')
+						out_tmp.write(','.join(['', 'Average intra-assay CV (within day CV)', '', '', 'Average inter-assay CV (between day CV)', '', '', 'Total CV','n=', '', ''])+'\n')
+						out_tmp.write(','.join(['Transition', 'Low', 'Med', 'High', 'Low', 'Med', 'High', 'Low', 'Med', 'High'])+'\n')
+						for index1, row1 in f1_df.iterrows():
+							out_tmp.write(','.join([row1['fragment_ion'], row1['low_intra_CV'], row1['med_intra_CV'], row1['high_intra_CV'], row1['low_inter_CV'], row1['med_inter_CV'], row1['high_inter_CV'], row1['low_count'], row1['med_count'], row1['high_count']])+'\n')
+						out_tmp.write('\n')
+				if experiment_type == 'exp3':
+					f1_df_status = file_status[0]
+					f1_df = df_list[0]
+					# Record CV table from f1_df
+					if f1_df_status:
+						out_tmp.write(peptideSeq+' precursor charge: '+precursorCharge+'\n\n')
+						out_tmp.write(','.join(['', 'Slope of Curve Fit for cell line', '', '', '', '', ''])+'\n')
+						#outf6.write(','.join(['Transition', '1', '2', '3', '4', '5', '6'])+'\n')
+						out_tmp.write('Transition,'+','.join(f1_df.columns[1:])+'\n')
+						for index1, row1 in f1_df.iterrows():
+							out_tmp.write(','.join(row1)+'\n')
+						out_tmp.write('\n')
+				if experiment_type == 'exp4':
+					f1_df_status = file_status[0]
+					f1_df = df_list[0]
+					# Record CV table from f1_df
+					if f1_df_status:
+						out_tmp.write(peptideSeq+' precursor charge: '+precursorCharge+'\n\n')
+						out_tmp.write(','.join(['Transition', 'control_intra_CV', 'actual_temp_intra_CV', 'frozen_intra_CV', 'FTx1_intra_CV', 'FTx2_intra_CV', 'all_intra_CV', 'all_inter_CV'])+'\n')
+						for index1, row1 in f1_df.iterrows():
+							out_tmp.write(','.join([row1['fragment_ion'], row1['control_intra_CV'], row1['actual_temp_intra_CV'], row1['frozen_intra_CV'], row1['FTx1_intra_CV'], row1['FTx2_intra_CV'], row1['all_intra_CV'], row1['all_inter_CV']])+'\n')
+						out_tmp.write('\n')
+				if experiment_type == 'exp5':
+					f1_df_status = file_status[0]
+					f1_df = df_list[0]
+					# Record CV table from f1_df
+					if f1_df_status:
+						out_tmp.write(peptideSeq+' precursor charge: '+precursorCharge+'\n\n')
+						out_tmp.write(','.join(['Transition', 'intra_CV', 'inter_CV', 'total_CV'])+'\n')
+						for index1, row1 in f1_df.iterrows():
+							out_tmp.write(','.join([row1['fragment_ion'], row1['intra_CV'], row1['inter_CV'], row1['total_CV']])+'\n')
+						out_tmp.write('\n')

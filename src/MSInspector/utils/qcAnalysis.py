@@ -272,7 +272,7 @@ def detectIS(skyFileDir, fileName, experiment_type, error_report_path, errorDfCo
 						if experiment_type=='exp1' or experiment_type=='exp2':
 							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard', 'The internal standard in the skyline file is set to be none.']+['']*(errorDfColNumber-4))+'\n'
 						else:
-							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard', 'The internal standard in the skyline file is set to be none. Please set it to be heavy.']+['']*(errorDfColNumber-4))+'\n'
+							errorInfor = '\t'.join([os.path.basename(fileName), 'Error', 'Internal standard', 'The internal standard in the skyline file is set to be none.']+['']*(errorDfColNumber-4))+'\n'
 						with open(error_report_path, 'a') as outfTmp:
 							outfTmp.write(errorInfor)
 						internal_standard_type = 'none'
