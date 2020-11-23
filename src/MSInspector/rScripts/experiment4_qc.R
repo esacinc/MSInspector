@@ -659,14 +659,6 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                 current_set <- QC_set[QC_set$fragment_ion==current_ion & QC_set$time==current_time & QC_set$sample_group==current_sample & QC_set$Replicate==current_Rep, ]
                                 current_Time <- paste(current_sample, ' (', current_time, ')', sep='')
                                 
-                                # This will be moved into error detection part.
-                                if(nrow(current_set[current_set$isotope_label_type=='light', ]) > 1){
-                                    stop("more than one light isotope")
-                                }
-                                if(nrow(current_set[current_set$isotope_label_type=='heavy', ]) > 1){
-                                    stop("more than one heavy isotope")
-                                }
-                                
                                 current_set_count <- nrow(current_set)
                                 if (current_set_count == 2) {
                                     light_area <- current_set[current_set$isotope_label_type=='light', 'area' ]
@@ -1058,7 +1050,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 CV_results_sub_2_plot <- CV_results_sub_2[CV_results_sub_2$fragment_ion  %in% ions_to_plot, ]
                 rownames(CV_results_sub_2_plot) <- CV_results_sub_2_plot$fragment_ion
                 CV_results_sub_2_plot <- CV_results_sub_2_plot[,-c(1)]
-                if (any(CV_results_sub_2_plot > cv_threshold)) {
+                if (any(CV_results_sub_2_plot > cv_threshold, na.rm = TRUE)) {
                     index_individual_array <- which(matrix(CV_results_sub_2_plot > cv_threshold, ncol=ncol(CV_results_sub_2_plot)), arr.ind=TRUE)
                     # if index_individual_array is 1*2 matrix, index_individual_array shouldn't be ordered by the first column.
                     if (length(index_individual_array) == 2) {

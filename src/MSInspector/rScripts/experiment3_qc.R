@@ -113,6 +113,27 @@ cv_cal <- function(x) {
     sd(x)/mean(x)
 }
 
+cv_cal2 <- function(x) {
+    x_min <- min(x)
+    if (x_min < 0) {
+       x <- x + abs(x_min)
+    }
+    sd(x)/mean(x)
+}
+
+cv_cal3 <- function(x) {
+    x_tmp <- abs(x)
+    sd(x_tmp)/mean(x_tmp)
+}
+
+intercept_scope <- function(x) {
+    max(x)-min(x)
+}
+
+rmse <- function(x) {
+    sqrt(sum(x**2)/length(x))
+}
+
 locate_abnormal_value <- function(x, valueType, thresold_value) {
     # x is a data.frame with the format of:
     # fragment_ion          1          2          3          4           5           6
@@ -146,7 +167,7 @@ plot_output_dir <- args[4]
 #dataset_path <- "normal_data.tsv"
 #fileList_path <- "file_namelist_IS.tsv"
 #plot_output <- "True"
-#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\qcAssayPortal\\src\\qcAssayPortal\\rScripts\\test\\infer_internal_standard_exp3_part2\\tmp"
+#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\qcAssayPortal\\src\\qcAssayPortal\\rScripts\\test\\transition_ratio_exp3\\tmp"
 
 if (plot_output == 'True') {
     plot_output <- TRUE
@@ -155,8 +176,13 @@ if (plot_output == 'True') {
 }
 
 cv_threshold <- 0.5
+rmse_threshold <- 1.0
 pValue_threshold <- 0.05
 rSquare_threshold <- 0.5
+relative_difference_threshold <- 0.2
+interceptSwtich <- FALSE
+nonBlankConcentrationSwitch <- TRUE
+
 
 # Load data from local table
 QC_set_total <- read.table(file=dataset_path, header=TRUE, sep='\t')
@@ -375,7 +401,6 @@ df_skydoc_error_peptide_precursorCharge$precursorCharge <- as.character(df_skydo
 
 #########################################
 # Infer the internal standard type for each SkyDocumentName by randomly sampled 5 peptides.
-# Since the internal standard type has to be predefined to be heavy in experiment, there is no need to infer the internal standard type.
 #########################################
 df_internal_standard_inferred <- data.frame(SkyDocumentName=as.character(), internal_standard=as.character())
 for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
@@ -528,6 +553,7 @@ if (plot_output) {
 # Traverse the SkyDocumentName in fileDf to detect all the possible warnings and generate the images and the tables for peptide without issues.
 # Detecting warnings functions will be added later. So generating images an tables for peptides without issues can be implemented firstly.
 #########################################
+#rmse_list <- c()
 for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
     # The defualt internal_standard should always be heavy. Evaluate the internal_standard, if the internal standard is wrong, errors will arise.
     original_internal_standard <- as.character(fileDf[fileDf$SkyDocumentName == SkyDocumentName, ]$internal_standard)
@@ -615,14 +641,6 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                 calculated_area_ratio <- 0
                                 
                                 current_set <- QC_set[QC_set$fragment_ion==current_ion & QC_set$sample_group==current_cell_line & QC_set$analyte_concentration==current_spike_level & QC_set$replicate==current_rep, ]
-                                # *** This part will be moved into error detection function chunk. ***
-                                if(nrow(current_set[current_set$isotope_label_type=='light', ]) > 1){
-                                    stop("more than one light isotope")
-                                }
-                                if(nrow(current_set[current_set$isotope_label_type=='heavy', ]) > 1){
-                                    stop("more than one heavy isotope")
-                                }
-                                
                                 current_set_count <- nrow(current_set)
                                 
                                 if (current_set_count == 2) {
@@ -680,14 +698,6 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                 measured_area <- 0
                                 
                                 current_set <- QC_set[QC_set$fragment_ion==current_ion & QC_set$sample_group==current_cell_line & QC_set$analyte_concentration==current_spike_level & QC_set$replicate==current_rep, ]
-                                # *** This part will be moved into error detection function chunk. ***
-                                if(nrow(current_set[current_set$isotope_label_type=='light', ]) > 1){
-                                    stop("more than one light isotope")
-                                }
-                                if(nrow(current_set[current_set$isotope_label_type=='heavy', ]) > 1){
-                                    stop("more than one heavy isotope")
-                                }
-                                
                                 current_set_count <- nrow(current_set)
                                 if (current_set_count == 2) {
                                     light_area <- current_set[current_set$isotope_label_type=='light', 'area' ]
@@ -696,12 +706,9 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                         theoretical_area <- heavy_area
                                         measured_area <- light_area
                                     }
-                                    else if (curve_type=='reverse'){
+                                    else {
                                         theoretical_area <- light_area
                                         measured_area <- heavy_area
-                                    }
-                                    else{
-                                        stop("invalid curve type")
                                     }
                                     
                                     add_to_sum <- 'false'
@@ -730,8 +737,8 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                     calculated_area_ratio <- sum_measured_area/sum_theoretical_area
                                 }
                                 fragment_ion_results <-  rbind(fragment_ion_results, data.frame(Peptide = input_peptide_sequence, Protein_Name = input_protein_name, Precursor_Charge = input_precursor_charge,
-                                                                                                fragment_ion = 'all', cell_line = current_cell_line, spike_level = current_spike_level, replicate = current_rep, light_area=light_area, heavy_area=heavy_area,
-                                                                                                theoretical_area=theoretical_area, measured_area=measured_area,
+                                                                                                fragment_ion = 'all', cell_line = current_cell_line, spike_level = current_spike_level, replicate = current_rep, light_area=sum_light_area, heavy_area=sum_heavy_area,
+                                                                                                theoretical_area=sum_theoretical_area, measured_area=sum_measured_area,
                                                                                                 calculated_area_ratio=calculated_area_ratio, ion_category='all'))
                             }
                         } # end current_cell_line
@@ -743,6 +750,12 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 summary_table <- data.frame(matrix(NA, ncol=length(cell_lines)+1, nrow=length(ions)))
                 colnames(summary_table) <- c("fragment_ion", cell_lines)
                 summary_table$fragment_ion <- ions
+                
+                # make summary data tables for intercepts
+                summary_table_intercept <- data.frame(matrix(NA, ncol=length(cell_lines)+1, nrow=length(ions)))
+                colnames(summary_table_intercept) <- c("fragment_ion", cell_lines)
+                summary_table_intercept$fragment_ion <- ions
+                
                 # make summary data tables for R squares
                 # make summary data tables for p values
                 summary_table_rSquare <- data.frame(matrix(NA, ncol=length(cell_lines)+1, nrow=length(ions)))
@@ -770,6 +783,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                         cell_line_subset <- plot_ave_reps %>% dplyr::filter(cell_line == current_cell_line)
                         mod = lm(calculated_area_ratio_ave_reps ~ spike_level, data = cell_line_subset)
                         summary_table[summary_table$fragment_ion == current_ion,current_cell_line] <- coef(mod)["spike_level"]
+                        summary_table_intercept[summary_table_intercept$fragment_ion == current_ion,current_cell_line] <- mod$coefficients[1]
                         summary_table_rSquare[summary_table_rSquare$fragment_ion == current_ion,current_cell_line] <- summary(mod)$r.squared
                         summary_table_pValue[summary_table_pValue$fragment_ion == current_ion,current_cell_line] <- summary(mod)$coefficients[2,4]
                     }
@@ -800,8 +814,8 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     ions_to_plot  <- c(three_highest_area_ratios, 'all')
                 }
                 
-                # The situation is acceptable, if the number of the fragment ions is less than 3.
-                # Therefore, comment the following statements.
+                # If the number of the fragment ions is less than 3, a warning is raised.
+                # But this is allowed, and it's commented.
 
                 #if (length(ions_to_plot) <4) {
                 #    errorType <- "Warning"
@@ -811,6 +825,46 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 #    cat(errorInfor)
                 #    cat('\n')
                 #}
+                
+                # For each Fragment ion, if its spike level is less than 3, a warning message will be raised.
+                # If the replicate number in any concentration is less than 2, a warning message will be raised.
+                errorReason_missing_point <- c()
+                for (current_plot_ion in ions_to_plot ) {
+                    plot_fragment_ion_results <- fragment_ion_results[!is.na(fragment_ion_results$calculated_area_ratio), ]
+                    plot_fragment_ion_results <- plot_fragment_ion_results[plot_fragment_ion_results$fragment_ion == current_plot_ion, ]
+                    errorReason_tmp <- c()
+                    spike_level_tmp <- unique(plot_fragment_ion_results$spike_level)
+                    if (length(spike_level_tmp) < 3) {
+                        errorReason_tmp1 <- "there are Less than 3 spike levels"
+                        errorReason_tmp <- c(errorReason_tmp, errorReason_tmp1)
+                    }
+                    spike_level_with_warnings <- c()
+                    spike_level_id <- which(spike_level_tmp==0)
+                    spike_level_tmp <- spike_level_tmp[-spike_level_id]
+                    plot_fragment_ion_results_tmp <- plot_fragment_ion_results[plot_fragment_ion_results$spike_level != 0, ]
+                    for (spike_level_tmp1 in spike_level_tmp) {
+                        plot_fragment_ion_results_tmp2 <- plot_fragment_ion_results_tmp[plot_fragment_ion_results_tmp$spike_level==spike_level_tmp1, ]
+                        if (length(unique(plot_fragment_ion_results_tmp2$replicate)) < 2) {
+                            spike_level_with_warnings <- c(spike_level_with_warnings, spike_level_tmp1)
+                        } 
+                    }
+                    if (length(spike_level_with_warnings) > 0) {
+                        errorReason_tmp2 <- paste("there are less than 2 replicates in spike level(s): ",  paste(spike_level_with_warnings, collapse = ", "), ".", sep="")
+                        errorReason_tmp <- c(errorReason_tmp, errorReason_tmp2)
+                    }
+                    
+                    if (length(errorReason_tmp) > 0) {
+                        errorReason_missing_point <- c(errorReason_missing_point, paste("For fragment ion ", current_plot_ion, ", ", paste(errorReason_tmp, collapse= ", "), sep=""))
+                    }
+                }
+                if (length(errorReason_missing_point) > 0){
+                    errorType <- "Warning"
+                    errorSubtype <- "Missing points"
+                    errorReason <- paste(errorReason_missing_point, collapse= " ")
+                    errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge), rep('', colNumber-5)), collapse='\t')
+                    cat(errorInfor)
+                    cat('\n')
+                }
                 
                 image_frame_count <- 4
                 CairoPNG(paste(plot_output_dir, "\\", input_peptide_sequence, "_", input_precursor_charge, "_", curve_type, ".png", sep=""), width=image_frame_count*480, height=400)
@@ -835,7 +889,15 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 dev.off()
                 # output to files
                 write.table(format(summary_table, digits=4), file=paste(plot_output_dir, "\\", input_peptide_sequence, "_", input_precursor_charge, "_", curve_type ,"_summary_table.tsv", sep=""), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
-                # Only keep the rSqares and pValues of the ions_to_plot
+                # Only keep the rSqares, pValues and intercepts of the ions_to_plot
+                summary_table_intercept_plot <- data.frame(matrix(nrow=0, ncol=length(cell_lines)+1))
+                colnames(summary_table_intercept_plot) <- c("fragment_ion", cell_lines)
+                for (current_plot_ion in ions_to_plot) {
+                  summary_table_intercept_plot <- rbind(summary_table_intercept_plot,
+                                                        summary_table_intercept[summary_table_intercept$fragment_ion==current_plot_ion, ])
+                }
+                rownames(summary_table_intercept_plot) <- as.character(c(1:nrow(summary_table_intercept_plot)))
+                
                 summary_table_rSquare_plot <- data.frame(matrix(nrow=0, ncol=length(cell_lines)+1))
                 colnames(summary_table_rSquare_plot) <- c("fragment_ion", cell_lines)
                 for (current_plot_ion in ions_to_plot) {
@@ -852,6 +914,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 }
                 rownames(summary_table_pValue_plot) <- as.character(c(1:nrow(summary_table_pValue_plot)))
                 # output to files
+                write.table(format(summary_table_intercept_plot, digits=4), file=paste(plot_output_dir, "\\", input_peptide_sequence, "_", input_precursor_charge, "_", curve_type ,"_summary_table_intercept.tsv", sep=""), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
                 write.table(format(summary_table_rSquare_plot, digits=4), file=paste(plot_output_dir, "\\", input_peptide_sequence, "_", input_precursor_charge, "_", curve_type ,"_summary_table_rSquare.tsv", sep=""), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
                 write.table(format(summary_table_pValue_plot, digits=3), file=paste(plot_output_dir, "\\", input_peptide_sequence, "_", input_precursor_charge, "_", curve_type ,"_summary_table_pValue.tsv", sep=""), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
                 # locate abnormal values of r square or p value.
@@ -896,7 +959,7 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     cv_table <- rbind(cv_table, cv_table_tmp)
                 }
                 for (indexComponent in c(1:ncol(summary_table_tmp))) {
-                    cv_table_tmp <- data.frame(component=colnames(summary_table_tmp)[indexComponent], type="sample group", cv=col_cv[indexComponent])
+                    cv_table_tmp <- data.frame(component=colnames(summary_table_tmp)[indexComponent], type="cell line", cv=col_cv[indexComponent])
                     cv_table <- rbind(cv_table, cv_table_tmp)
                 }
                 rownames(cv_table) <- c(1:nrow(cv_table))
@@ -919,6 +982,177 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     cat('\n')
                 }
                 write.table(format(cv_table, digits=3), file=paste(plot_output_dir, "\\", input_peptide_sequence, "_", input_precursor_charge, "_", curve_type ,"_cv_table.tsv", sep=""), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
+                
+                # Calculate the rmse for the intercepts of fragment ions across different cell lines.
+                # Calculate the rmse for the slops of cell lines across different fragment ions.
+                # If Exp 3 takes light as internal standard isotopes and spikes heavy isotopes, the expected intercept of y value should be zero.
+                # rmse for the intercepts of fragment ions across different cell lines is considered.
+                # If Exp 3 takes heavy as internal standard isotopes and spikes light isotopes, we can't garantee each matrix doesn't contain endogenouse proteins. The expected intercept of y values for each matrix could be different.
+                # MSInspector can't report warnings about the intercepts.
+                if (interceptSwtich) {
+                    if (internal_standard == 'light') {
+                        summary_table_tmp2 <- data.frame(matrix(nrow=0, ncol=length(cell_lines)+1))
+                        colnames(summary_table_tmp2) <- c("fragment_ion", cell_lines)
+                        for (current_plot_ion in ions_to_plot) {
+                          summary_table_tmp2 <- rbind(summary_table_tmp2,
+                                                      summary_table_intercept[summary_table_intercept$fragment_ion==current_plot_ion, ])
+                        }
+                        rownames(summary_table_tmp2) <- as.character(c(1:nrow(summary_table_tmp2)))
+                        summary_table_tmp3 <- summary_table_tmp2[2:ncol(summary_table_tmp2)]
+                        cv_table2 <- data.frame(component=as.character(), type=as.character(), rmse=as.numeric())
+                        row_cv2 <- apply(summary_table_tmp3, 1, rmse)
+                        col_cv2 <- apply(summary_table_tmp3, 2, rmse)
+                        for (indexComponent in c(1:length(ions_to_plot))) {
+                          cv_table_tmp <- data.frame(component=ions_to_plot[indexComponent], type="fragment ion", rmse=row_cv2[indexComponent])
+                          cv_table2 <- rbind(cv_table2, cv_table_tmp)
+                        }
+                        for (indexComponent in c(1:ncol(summary_table_tmp3))) {
+                          cv_table_tmp <- data.frame(component=colnames(summary_table_tmp3)[indexComponent], type="cell line", rmse=col_cv2[indexComponent])
+                          cv_table2 <- rbind(cv_table2, cv_table_tmp)
+                        }
+                        
+                        rownames(cv_table2) <- c(1:nrow(cv_table2))
+                        large_cv_list2 <- rownames(cv_table2)[cv_table2$rmse > rmse_threshold]
+                        #rmse_list <- c(rmse_list, cv_table2$rmse)
+                        if (length(large_cv_list2) > 0) {
+                          errorType <- "Warning"
+                          errorSubtype <- "Bad linear regression fitting"
+                          errorReason <- paste(paste('The RMSE of intercepts at y axis of ', cv_table2[large_cv_list2, ]$type, ' of ', cv_table2[large_cv_list2, ]$component, ' is ', format(cv_table2[large_cv_list2, ]$rmse, digits=4), ' > ', rmse_threshold, sep=''), collapse= '. ')
+                          errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge), rep('', colNumber-5)), collapse='\t')
+                          cat(errorInfor)
+                          cat('\n')
+                        }
+                        write.table(format(cv_table2, digits=3), file=paste(plot_output_dir, "\\", input_peptide_sequence, "_", input_precursor_charge, "_", curve_type ,"_rmse_table_intercept.tsv", sep=""), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
+                    }
+                }
+                if (FALSE) {
+                    fragment_ion_results_plot <- fragment_ion_results[fragment_ion_results$fragment_ion %in% ions_to_plot, ]
+                    fragment_ion_results_plot_2 <- fragment_ion_results_plot[fragment_ion_results_plot$spike_level > 0, ]
+                    fragment_ion_results_plot_2 <- as.data.frame(fragment_ion_results_plot_2 %>%
+                                                     group_by(Peptide, Protein_Name, Precursor_Charge, fragment_ion, spike_level) %>%
+                                                     summarise(Ratio_mean=mean(calculated_area_ratio), Ratio_max=max(calculated_area_ratio), Ratio_min=min(calculated_area_ratio)))
+                    fragment_ion_results_plot_3 <- fragment_ion_results_plot_2[!((fragment_ion_results_plot_2$Ratio_max <= 1.3*fragment_ion_results_plot_2$Ratio_mean & fragment_ion_results_plot_2$Ratio_max >= 0.7*fragment_ion_results_plot_2$Ratio_mean) & (fragment_ion_results_plot_2$Ratio_min <= 1.3*fragment_ion_results_plot_2$Ratio_mean & fragment_ion_results_plot_2$Ratio_min >= 0.7*fragment_ion_results_plot_2$Ratio_mean)),]
+                    if (nrow(fragment_ion_results_plot_3) > 0) {
+                        unique_fragment_ion <- unique(fragment_ion_results_plot_3$fragment_ion)
+                        errorType <- "Warning"
+                        errorSubtype <- "High variance"
+                        errorReasonTmp <- c()
+                        for (fragment_ion_tmp in unique_fragment_ion) {
+                          errorReasonTmp <- c(errorReasonTmp, paste("for fragment ion ", fragment_ion_tmp, " at the spike level(s) of ", paste(fragment_ion_results_plot_3[fragment_ion_results_plot_3$fragment_ion == fragment_ion_tmp, ]$spike_level, collapse=', '), sep = ''))
+                        }
+                        errorReason <- paste('When checking the samples with the non blank spike levels, ', paste(errorReasonTmp, collapse = ', '), ', not all of the area ratios are within 30% of the mean.')
+                        errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge), rep('', colNumber-5)), collapse='\t')
+                        cat(errorInfor)
+                        cat('\n')
+                    }
+                }
+                
+                if (nonBlankConcentrationSwitch) {
+                    fragment_ion_results_plot <- fragment_ion_results[fragment_ion_results$fragment_ion %in% ions_to_plot, ]
+                    fragment_ion_results_plot_2 <- fragment_ion_results_plot[fragment_ion_results_plot$spike_level > 0, ]
+                    
+                    fragment_ion_results_tmp_sum <- fragment_ion_results_plot_2[fragment_ion_results_plot_2$fragment_ion=='all', ]
+                    fragment_ion_results_tmp_idividual <- fragment_ion_results_plot_2[fragment_ion_results_plot_2$fragment_ion!='all', ]
+                    
+                    heavyArea_transition_ratio <- c()
+                    lightArea_transition_ratio <- c()
+                    for (i in 1:nrow(fragment_ion_results_tmp_idividual)) {
+                      row <- fragment_ion_results_tmp_idividual[i,]
+                      row_sum_tmp <- fragment_ion_results_tmp_sum[fragment_ion_results_tmp_sum$cell_line==row$cell_line & fragment_ion_results_tmp_sum$spike_level==row$spike_level & fragment_ion_results_tmp_sum$replicate==row$replicate, ]
+                      heavyArea_transition_ratio <- c(heavyArea_transition_ratio, row$heavy_area/row_sum_tmp$heavy_area)
+                      lightArea_transition_ratio <- c(lightArea_transition_ratio, row$light_area/row_sum_tmp$light_area)
+                    }
+                    fragment_ion_results_tmp_idividual$heavyArea_transition_ratio <- heavyArea_transition_ratio
+                    fragment_ion_results_tmp_idividual$lightArea_transition_ratio <- lightArea_transition_ratio
+                    
+                    # Step1: Check whether there are all samples in non-blank levels, no all of transition ratio are within 30% of the mean.
+                    fragment_ion_results_tmp_idividual_2 <- as.data.frame(fragment_ion_results_tmp_idividual %>%
+                                                                            dplyr::group_by(Protein_Name, Peptide, Precursor_Charge, fragment_ion) %>%
+                                                                            dplyr::summarise(heavyArea_transition_ratio_mean=mean(heavyArea_transition_ratio, na.rm=TRUE), heavyArea_transition_ratio_max=max(heavyArea_transition_ratio, na.rm=TRUE), heavyArea_transition_ratio_min=min(heavyArea_transition_ratio, na.rm=TRUE),
+                                                                                             lightArea_transition_ratio_mean=mean(lightArea_transition_ratio, na.rm=TRUE), lightArea_transition_ratio_max=max(lightArea_transition_ratio, na.rm=TRUE), lightArea_transition_ratio_min=min(lightArea_transition_ratio, na.rm=TRUE)))
+                    # Remove the rows with NAs
+                    row.has.na <- apply(fragment_ion_results_tmp_idividual_2, 1, function(x){any(is.na(x))})
+                    fragment_ion_results_tmp_idividual_2 <-  fragment_ion_results_tmp_idividual_2[!row.has.na,]
+                    
+                    if (nrow(fragment_ion_results_tmp_idividual_2) > 0) {
+                        fragment_ion_results_tmp_idividual_2_heavy <- fragment_ion_results_tmp_idividual_2[!((fragment_ion_results_tmp_idividual_2$heavyArea_transition_ratio_max <= 1.3*fragment_ion_results_tmp_idividual_2$heavyArea_transition_ratio_mean & fragment_ion_results_tmp_idividual_2$heavyArea_transition_ratio_max >= 0.7*fragment_ion_results_tmp_idividual_2$heavyArea_transition_ratio_mean) & (fragment_ion_results_tmp_idividual_2$heavyArea_transition_ratio_min <= 1.3*fragment_ion_results_tmp_idividual_2$heavyArea_transition_ratio_mean & fragment_ion_results_tmp_idividual_2$heavyArea_transition_ratio_min >= 0.7*fragment_ion_results_tmp_idividual_2$heavyArea_transition_ratio_mean)),]
+                        fragment_ion_results_tmp_idividual_2_light <- fragment_ion_results_tmp_idividual_2[!((fragment_ion_results_tmp_idividual_2$lightArea_transition_ratio_max <= 1.3*fragment_ion_results_tmp_idividual_2$lightArea_transition_ratio_mean & fragment_ion_results_tmp_idividual_2$lightArea_transition_ratio_max >= 0.7*fragment_ion_results_tmp_idividual_2$lightArea_transition_ratio_mean) & (fragment_ion_results_tmp_idividual_2$lightArea_transition_ratio_min <= 1.3*fragment_ion_results_tmp_idividual_2$lightArea_transition_ratio_mean & fragment_ion_results_tmp_idividual_2$lightArea_transition_ratio_min >= 0.7*fragment_ion_results_tmp_idividual_2$lightArea_transition_ratio_mean)), ]
+                        
+                        if (nrow(fragment_ion_results_tmp_idividual_2_heavy)+nrow(fragment_ion_results_tmp_idividual_2_light) > 0) {
+                            fragment_ion_results_tmp_idividual_2_trans <- data.frame(fragment_ion=as.character(), isotope_warining=as.character(), stringsAsFactors = FALSE)
+                            if (nrow(fragment_ion_results_tmp_idividual_2_heavy) > 0) {
+                                thisPeptide_4_trans_tmp <- data.frame(fragment_ion=fragment_ion_results_tmp_idividual_2_heavy$fragment_ion, isotope_warining=rep("heavy", nrow(fragment_ion_results_tmp_idividual_2_heavy)))
+                                fragment_ion_results_tmp_idividual_2_trans <- rbind(fragment_ion_results_tmp_idividual_2_trans, thisPeptide_4_trans_tmp)
+                            }
+                            if (nrow(fragment_ion_results_tmp_idividual_2_light) > 0) {
+                                for (i in 1:nrow(fragment_ion_results_tmp_idividual_2_light)) {
+                                    if (fragment_ion_results_tmp_idividual_2_light$fragment_ion[i] %in% fragment_ion_results_tmp_idividual_2_trans$fragment_ion) {
+                                        fragment_ion_results_tmp_idividual_2_trans$isotope_warining <- as.character(fragment_ion_results_tmp_idividual_2_trans$isotope_warining)
+                                        fragment_ion_results_tmp_idividual_2_trans$isotope_warining[fragment_ion_results_tmp_idividual_2_trans$fragment_ion == fragment_ion_results_tmp_idividual_2_light$fragment_ion[i]] <- 'heavy or light'
+                                    } else {
+                                        thisPeptide_4_trans_tmp <- data.frame(fragment_ion=fragment_ion_results_tmp_idividual_2_light$fragment_ion[i], isotope_warining='light')
+                                        fragment_ion_results_tmp_idividual_2_trans <- rbind(fragment_ion_results_tmp_idividual_2_trans, thisPeptide_4_trans_tmp)
+                                    }
+                                }
+                            }
+                            errorType <- "Warning"
+                            errorSubtype <- "High variance"
+                            errorReasonTmp <- c()
+                            for (i in 1:nrow(fragment_ion_results_tmp_idividual_2_trans)) {
+                              errorReasonTmp <- c(errorReasonTmp, paste("for fragment ion ", fragment_ion_results_tmp_idividual_2_trans[i, ]$fragment_ion, ", not all of the transition ratios from ", fragment_ion_results_tmp_idividual_2_trans[i, ]$isotope_warining, ' isotope labeled peptide are within 30% of the mean', sep = ''))
+                            }
+                            errorReason <- paste('When checking samples with the non blank spike levels, ', paste(errorReasonTmp, collapse = ', '), '.', sep='')
+                            errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge), rep('', colNumber-5)), collapse='\t')
+                            cat(errorInfor)
+                            cat('\n')
+                        }
+                        
+                        # Step 2: for each ion transition, take the transformation + t-test approach for the calculation of p value to determine if there is a significant difference between the means of two groups (heavy and mean).
+                        fragment_ion_results_tmp_idividual$heavyArea_transition_ratio_log <- suppressWarnings(log(fragment_ion_results_tmp_idividual$heavyArea_transition_ratio/(1-fragment_ion_results_tmp_idividual$heavyArea_transition_ratio)))
+                        fragment_ion_results_tmp_idividual$lightArea_transition_ratio_log <- suppressWarnings(log(fragment_ion_results_tmp_idividual$lightArea_transition_ratio/(1-fragment_ion_results_tmp_idividual$lightArea_transition_ratio)))
+                        
+                        # Replace Inf and -Inf with NA
+                        fragment_ion_results_tmp_idividual$heavyArea_transition_ratio_log[which(fragment_ion_results_tmp_idividual$heavyArea_transition_ratio_log == Inf | fragment_ion_results_tmp_idividual$heavyArea_transition_ratio_log == -Inf)] <- NA
+                        fragment_ion_results_tmp_idividual$lightArea_transition_ratio_log[which(fragment_ion_results_tmp_idividual$lightArea_transition_ratio_log == Inf | fragment_ion_results_tmp_idividual$lightArea_transition_ratio_log == -Inf)] <- NA
+                        
+                        # Since t test can't be applied to the vectors with one element.
+                        # Remove fragment ion with only one data point
+                        fragment_ion_to_remove <- c()
+                        for (fragmention_ion_to_check in unique(fragment_ion_results_tmp_idividual$fragment_ion)) {
+                            if (nrow(fragment_ion_results_tmp_idividual[fragment_ion_results_tmp_idividual$fragment_ion==fragmention_ion_to_check, ]) == 1) {
+                                fragment_ion_to_remove <- c(fragment_ion_to_remove, fragmention_ion_to_check)
+                            }
+                        }
+                        fragment_ion_results_tmp_idividual <- fragment_ion_results_tmp_idividual[!(fragment_ion_results_tmp_idividual$fragment_ion %in% fragment_ion_to_remove), ]
+                        if (nrow(fragment_ion_results_tmp_idividual) > 1) {
+                          try ({
+                              thisPeptide_5 <- as.data.frame(fragment_ion_results_tmp_idividual %>%
+                                                               dplyr::group_by(Protein_Name, Peptide, Precursor_Charge, fragment_ion) %>%
+                                                               dplyr::summarise(heavyArea_transition_ratio_log_mean=mean(heavyArea_transition_ratio_log, na.rm=TRUE), lightArea_transition_ratio_log_mean=mean(lightArea_transition_ratio_log, na.rm=TRUE), pValue.log=t.test(heavyArea_transition_ratio_log, lightArea_transition_ratio_log)$p.value, heavyArea_transition_ratio_mean=mean(heavyArea_transition_ratio, na.rm=TRUE), lightArea_transition_ratio_mean=mean(lightArea_transition_ratio, na.rm=TRUE), pValue=t.test(heavyArea_transition_ratio, lightArea_transition_ratio)$p.value))
+                              thisPeptide_5$Internal_standard <- rep(internal_standard, nrow(thisPeptide_5))
+                              if (internal_standard=='light') {
+                                thisPeptide_5$relative_difference <- (thisPeptide_5$heavyArea_transition_ratio_mean-thisPeptide_5$lightArea_transition_ratio_mean)/thisPeptide_5$lightArea_transition_ratio_mean
+                              } else {
+                                thisPeptide_5$relative_difference <- (thisPeptide_5$lightArea_transition_ratio_mean-thisPeptide_5$heavyArea_transition_ratio_mean)/thisPeptide_5$heavyArea_transition_ratio_mean
+                              }
+                              
+                              thisPeptide_5 <- thisPeptide_5[thisPeptide_5$pValue < pValue_threshold & abs(thisPeptide_5$relative_difference > relative_difference_threshold), ]
+                              if (nrow(thisPeptide_5) > 0) {
+                                  errorType <- "Warning"
+                                  errorSubtype <- "High variance"
+                                  errorReasonTmp <- c()
+                                  for (i in 1:nrow(thisPeptide_5)) {
+                                    errorReasonTmp <- c(errorReasonTmp, paste("for fragment ion ", thisPeptide_5[i, ]$fragment_ion, ", the mean of transition ratios from the heavy isotope labeled peptide (", round(thisPeptide_5[i, ]$heavyArea_transition_ratio_mean, 4), ') is significantly different from the mean of transition ratios from the light isotope labeled peptide (', round(thisPeptide_5[i, ]$lightArea_transition_ratio_mean, 4), ') and the relative difference (comparing to the internal standard type: ' ,thisPeptide_5[i, ]$Internal_standard, ') is ', paste(round(100*thisPeptide_5[i, ]$relative_difference, 4), "%", sep=""), sep = ''))
+                                  }
+                                  errorReason <- paste('When checking samples with the non blank spike levels, ', paste(errorReasonTmp, collapse = ', '), '.', sep='')
+                                  errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence, '', input_precursor_charge), rep('', colNumber-5)), collapse='\t')
+                                  cat(errorInfor)
+                                  cat('\n')
+                              }
+                          }, silent = TRUE)
+                        }
+                    }
+                }
             }
         }
     }

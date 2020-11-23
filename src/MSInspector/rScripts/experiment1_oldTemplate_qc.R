@@ -175,6 +175,10 @@ identify_uniProtKB_entryID  <- function(x) {
     uniProtKB_entryID
 }
 
+myFUN<- function(x, c1, c2) {
+    c(sum(x[c1],1), mean(x[c2])) 
+}
+
 args <- commandArgs(trailingOnly = TRUE)
 dataset_path <- args[1]
 fileList_path <- args[2]
@@ -185,7 +189,7 @@ mypeptideType_file_path <- args[5]
 #dataset_path <- "normal_data.tsv"
 #fileList_path <- "file_namelist_IS.tsv"
 #plot_output <- "True"
-#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\qcAssayPortal\\src\\qcAssayPortal\\rScripts\\test\\fix_Jeff_issue_exp1\\tmp"
+#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\data\\WashU_Robert_data\\Exp1\\troubleshoot\\tmp"
 #mypeptideType_file_path <- "mypeptideType_file.tsv"
 
 if (plot_output == 'True') {
@@ -195,10 +199,15 @@ if (plot_output == 'True') {
 }
 RCAnalysisSwitch <- TRUE
 qcSlopeSwitch <- TRUE
+linearitySwitch <- TRUE
+aboveLLOQSwitch <- TRUE
 
 cv_threshold <- 0.5
 pValue_threshold <- 0.05
 rSquare_threshold <- 0.5
+linearity_lower_limit <- 0.75
+linearity_upper_limit <- 1.25
+relative_difference_threshold <- 0.2
 
 # Load data from local table
 labkey.data.total <- read.table(file=dataset_path, header=TRUE, sep='\t')
@@ -806,6 +815,41 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 #mTitle <- paste("Analyte: ", mProtein, ".", uniquePeptide[1], "\n", sep="")
                 mTitle <- paste("Analyte: ", protein_uniProtID, ".", uniquePeptide[1], "\n", sep="")
                 thisPeptide$Max[thisPeptide$Max > max(thisPeptide$Median)*2] <- max(thisPeptide$Median)
+                
+                # For each Fragment ion, if its concentration level is less than 3, a warning message will be raised.
+                # If the replicate number in any concentration is less than 3, a warning message will be raised.
+                fragment_ion_list_tmp <- unique(thisPeptide$FragmentIon)
+                errorReason_missing_point <- c()
+                for (fragment_ion_tmp in fragment_ion_list_tmp) {
+                    fragment_ion_data <- thisPeptide[thisPeptide$FragmentIon == fragment_ion_tmp, ]
+                    errorReason_tmp <- c()
+                    if (length(fragment_ion_data$Concentration) < 3) {
+                        errorReason_tmp1 <- "there are Less than 3 concentration levels"
+                        errorReason_tmp <- c(errorReason_tmp, errorReason_tmp1)
+                    }
+                    fragment_ion_data_tmp <- fragment_ion_data[fragment_ion_data$Concentration>0 & fragment_ion_data$Count<2, ]
+                    if (nrow(fragment_ion_data_tmp) > 0) {
+                        errorReason_tmp2 <- paste("there are less than 2 replicates in concentration(s): ",  paste(fragment_ion_data_tmp$Concentration, collapse = ", "), ".", sep="")
+                        errorReason_tmp <- c(errorReason_tmp, errorReason_tmp2)
+                    }
+                    if (length(errorReason_tmp) > 0) {
+                       #if (length(errorReason_tmp) == 1) {
+                      #    errorReason_missing_point <- c(errorReason_missing_point, paste("For fragment ion ", fragment_ion_tmp[1], ", ", errorReason_tmp, ".", sep=""))
+                       #} else {
+                        errorReason_missing_point <- c(errorReason_missing_point, paste("For fragment ion ", fragment_ion_tmp, ", ", paste(errorReason_tmp, collapse= ", "), sep=""))
+                      # }
+                    }
+                }
+                
+                if (length(errorReason_missing_point) > 0){
+                    errorType <- "Warning"
+                    errorSubtype <- "Missing points"
+                    errorReason <- paste(errorReason_missing_point, collapse= " ")
+                    errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
+                    cat(errorInfor)
+                    cat('\n')
+                }
+                
                 for (myplotType in c("linear", "log", "residual")) {
                     if ( tolower(myplotType) == "linear") {
                         mxlabel <- "\nTheoretical Concentration (fmol/uL)"
@@ -854,8 +898,9 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                                 invisible()
                             }
                             # Judge whether the linear fits of the fragment ions are good or not according to the slopes.
-                            rSquareMin <- min(lm_data$rSquare)
-                            pValueMax <- max(lm_data$pValue)
+                            rSquareMin <- min(lm_data$rSquare, na.rm=TRUE)
+                            pValueMax <- max(lm_data$pValue, na.rm=TRUE)
+                            
                             if ( rSquareMin < rSquare_threshold || pValueMax > pValue_threshold) {
                                 errorType <- "Warning"
                                 errorSubtype <- "Bad linear regression fitting"
@@ -884,6 +929,29 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                         p <- ggplot(data=thisPeptide[thisPeptide$Concentration >0,], aes(x=log(Concentration,10), y=log(Median,10), color=FragmentIon)) + geom_errorbar(aes(ymin=log(Min,10), ymax=log(Max,10)), position=pd, width=geom_errorbar_width_tmp) +geom_point(position=pd, size=2) + xlab(mxlabel) + ylab("Log Peak Area Ratio") + theme(title=element_text(size=18, colour="black"), axis.text=element_text(size=16),   axis.text.x=element_text(colour=mcolor), axis.title=element_text(size=20) , axis.title.x=element_text( colour=mcolor), legend.position = c(0.2, 0.85), legend.title = element_text(size=14), legend.text = element_text(size=14))+ labs(title=mTitle)+ scale_colour_discrete(name = "Transition")    
                         print(p)
                         dev.off()
+                        if (linearitySwitch) {
+                            thisPeptide_type2 <- thisPeptide[thisPeptide$Concentration>0, ]
+                            thisPeptide_type2$logMedian <- log(thisPeptide_type2$Median, 10)
+                            thisPeptide_type2$logConcentration <- log(thisPeptide_type2$Concentration, 10)
+                            
+                            thisPeptide_type2 <- thisPeptide_type2[thisPeptide_type2$logMedian != -Inf, ]
+                          
+                            lm_data_type2 <- as.data.frame(thisPeptide_type2 %>%
+                                                     group_by(FragmentIon) %>%
+                                                     do({
+                                                       mod = lm(logMedian ~ logConcentration, data = .)
+                                                       data.frame(Intercept = coef(mod)[1], Slope = coef(mod)[2], rSquare = summary(mod)$r.squared , pValue = summary(mod)$coefficients[2,4])
+                                                     }))
+                            non_linearity_data <- lm_data_type2[lm_data_type2$Slope > linearity_upper_limit | lm_data_type2$Slope < linearity_lower_limit, ]
+                            if (nrow(non_linearity_data) > 0) {
+                                errorType <- "Warning"
+                                errorSubtype <- "Bad linear regression fitting"
+                                errorReason <- paste("The exponent(s) of the fitted power function to the data of the fragment ions (", paste(unique(non_linearity_data$FragmentIon), collapse=', '), ") is(are) larger than ", linearity_upper_limit, " or is(are) lower than ", linearity_lower_limit,".", sep= '')
+                                errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
+                                cat(errorInfor)
+                                cat('\n')
+                          }
+                        }
                     }
                     if ( tolower(myplotType) == "residual"){
                         mxlabel <- "\nLog Theoretical Concentration (fmol/uL)"
@@ -965,6 +1033,12 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                 thisPeptide$PrecursorCharge <- substr(thisPeptide$PrecursorCharge,1,1)
                 thisPeptide$ProductCharge <- substr(thisPeptide$ProductCharge,1,1)
                 uniquePeptide <- unique(thisPeptide$PeptideModifiedSequence)
+                thisPeptide_2 <- df2[curveDataIndex,]
+                thisPeptide_2$PrecursorCharge <- substr(thisPeptide_2$PrecursorCharge,1,1)
+                thisPeptide_2$ProductCharge <- substr(thisPeptide_2$ProductCharge,1,1)
+                thisPeptide_2$FragmentIon <- paste(thisPeptide_2$PrecursorCharge, thisPeptide_2$FragmentIon, thisPeptide_2$ProductCharge, sep=".") 
+                thisPeptide_2[thisPeptide_2$FragmentIon == ".Sum.tr.", ]$FragmentIon <- "Sum"
+                
                 
                 if (plot_output) {
                     # Calculate LOD/LOQ
@@ -1119,6 +1193,159 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     mergeTable_ordered <- set_order(mergeTable)
                     write.table(format(mergeTable_ordered, digits=3), file = paste(plot_output_dir, "\\", input_peptide_sequence, '_', indexLabel, '_ResponseCurveAnalysis.LODCTable.tsv', sep=''), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)   
                     #write.csv(format(mergeTable[,1:7], digits=3), file=paste(plot_output_dir, "\\", input_peptide_sequence, '_ResponseCurveAnalysis.LODCTable.csv', sep=''), row.names=FALSE, quote=FALSE)
+                    if (FALSE) {
+                        mergeTable_ordered$LLOQ <- apply(mergeTable_ordered[c('blank+low_conc_LOQ', 'blank_only_LOQ', 'rsd_limit_LOQ')], 1, max)
+                        LLOQ <- max(mergeTable_ordered$LLOQ)
+                        thisPeptide_2 <- thisPeptide_2[thisPeptide_2$Concentration > LLOQ, ]
+                        thisPeptide_2 <- as.data.frame(thisPeptide_2 %>%
+                                                       group_by(ProteinName, PeptideModifiedSequence, PrecursorCharge, ProductCharge, FragmentIon, Concentration) %>%
+                                                       summarise(Ratio_mean=mean(Ratio), Ratio_max=max(Ratio), Ratio_min=min(Ratio)))
+                        thisPeptide_3 <- thisPeptide_2[!((thisPeptide_2$Ratio_max <= 1.3*thisPeptide_2$Ratio_mean & thisPeptide_2$Ratio_max >= 0.7*thisPeptide_2$Ratio_mean) & (thisPeptide_2$Ratio_min <= 1.3*thisPeptide_2$Ratio_mean & thisPeptide_2$Ratio_min >= 0.7*thisPeptide_2$Ratio_mean)),]
+                        if (nrow(thisPeptide_3) > 0) {
+                            unique_fragment_ion <- unique(thisPeptide_3$FragmentIon)
+                            errorType <- "Warning"
+                            errorSubtype <- "High variance"
+                            errorReasonTmp <- c()
+                            for (fragment_ion_tmp in unique_fragment_ion) {
+                              errorReasonTmp <- c(errorReasonTmp, paste("for fragment ion ", fragment_ion_tmp, " at the concentration(s) of ", paste(thisPeptide_3[thisPeptide_3$FragmentIon == fragment_ion_tmp, ]$Concentration, collapse=', '), sep = ''))
+                            }
+                            errorReason <- paste('When checking the concentrations above LLOQ, ', paste(errorReasonTmp, collapse = ', '), ', not all of the area ratios are within 30% of the mean.')
+                            errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
+                            cat(errorInfor)
+                            cat('\n')
+                        }
+                    }
+                    
+                    if (aboveLLOQSwitch) {
+                        mergeTable_ordered$LLOQ <- suppressWarnings(apply(mergeTable_ordered[c('blank+low_conc_LOQ', 'blank_only_LOQ', 'rsd_limit_LOQ')], 1, max, na.rm=TRUE))
+                        LLOQ <- max(mergeTable_ordered$LLOQ, na.rm=TRUE)
+                        if (LLOQ < 0) {
+                            LLOQ <- 0
+                        }
+                        # Since LLOQ is only caluclated based on Ratio. The actural LLOQ should be LLOQ*ISSpike(the concentration of internal standard for this peptide)
+                        # And the unit of the concentration is fmol/uL
+                        if (all(thisPeptide_2$ISSpike == 0)) {
+                          LLOQ <- LLOQ*1.0
+                        } else {
+                            LLOQ <- LLOQ*thisPeptide_2$ISSpike[1]
+                        }
+                        LLOQ <- LLOQ*thisPeptide_2$ISSpike[1]
+                        
+                        thisPeptide_2 <- thisPeptide_2[thisPeptide_2$Concentration > LLOQ, ]
+                        
+                        if (nrow(thisPeptide_2) > 0) {
+                            thisPeptide_3_sum <- thisPeptide_2[thisPeptide_2$FragmentIon=='Sum', ]
+                            thisPeptide_3 <- thisPeptide_2[thisPeptide_2$FragmentIon!='Sum', ]
+                            
+                            # In the old template of Experiment 1, replicate (replicate name) is a identifier to determine the each sample.
+                            heavyArea_transition_ratio <- c()
+                            lightArea_transition_ratio <- c()
+                            for (i in 1:nrow(thisPeptide_3)) {
+                              row <- thisPeptide_3[i,]
+                              row_sum_tmp <- thisPeptide_3_sum[thisPeptide_3_sum$Replicate==row$Replicate, ]
+                              heavyArea_transition_ratio <- c(heavyArea_transition_ratio, row$heavyArea/row_sum_tmp$heavyArea)
+                              lightArea_transition_ratio <- c(lightArea_transition_ratio, row$lightArea/row_sum_tmp$lightArea)
+                            }
+                            thisPeptide_3$heavyArea_transition_ratio <- heavyArea_transition_ratio
+                            thisPeptide_3$lightArea_transition_ratio <- lightArea_transition_ratio
+                            
+                            # Step 1. Check whether there are all samples above the LLOQ, no all of transition ratio are within 30% of the mean.
+                            # Since packages plyr and dplyr are all loaded, when using summarise fuction, direct R to call dplyr's functions directly.
+                            thisPeptide_4 <- as.data.frame(thisPeptide_3 %>%
+                                                             dplyr::group_by(ProteinName, PeptideModifiedSequence, PrecursorCharge, ProductCharge, FragmentIon) %>%
+                                                             dplyr::summarise(heavyArea_transition_ratio_mean=mean(heavyArea_transition_ratio, na.rm=TRUE), heavyArea_transition_ratio_max=max(heavyArea_transition_ratio, na.rm=TRUE), heavyArea_transition_ratio_min=min(heavyArea_transition_ratio, na.rm=TRUE),
+                                                                              lightArea_transition_ratio_mean=mean(lightArea_transition_ratio, na.rm=TRUE), lightArea_transition_ratio_max=max(lightArea_transition_ratio, na.rm=TRUE), lightArea_transition_ratio_min=min(lightArea_transition_ratio, na.rm=TRUE)))
+                            
+                            # Remove the rows with NAs
+                            row.has.na <- apply(thisPeptide_4, 1, function(x){any(is.na(x))})
+                            thisPeptide_4 <-  thisPeptide_4[!row.has.na,]
+                            
+                            if (nrow(thisPeptide_4) > 0) {
+                                thisPeptide_4_heavy <- thisPeptide_4[!((thisPeptide_4$heavyArea_transition_ratio_max <= 1.3*thisPeptide_4$heavyArea_transition_ratio_mean & thisPeptide_4$heavyArea_transition_ratio_max >= 0.7*thisPeptide_4$heavyArea_transition_ratio_mean) & (thisPeptide_4$heavyArea_transition_ratio_min <= 1.3*thisPeptide_4$heavyArea_transition_ratio_mean & thisPeptide_4$heavyArea_transition_ratio_min >= 0.7*thisPeptide_4$heavyArea_transition_ratio_mean)),]
+                                thisPeptide_4_light <- thisPeptide_4[!((thisPeptide_4$lightArea_transition_ratio_max <= 1.3*thisPeptide_4$lightArea_transition_ratio_mean & thisPeptide_4$lightArea_transition_ratio_max >= 0.7*thisPeptide_4$lightArea_transition_ratio_mean) & (thisPeptide_4$lightArea_transition_ratio_min <= 1.3*thisPeptide_4$lightArea_transition_ratio_mean & thisPeptide_4$lightArea_transition_ratio_min >= 0.7*thisPeptide_4$lightArea_transition_ratio_mean)), ]
+                                
+                                if (nrow(thisPeptide_4_heavy)+nrow(thisPeptide_4_light) > 0) {
+                                    thisPeptide_4_trans <- data.frame(FragmentIon=as.character(), isotope_warining=as.character(), stringsAsFactors = FALSE)
+                                    # Merge thisPeptide_4_heavy and thisPeptide_4_light by FragmentIon
+                                    if (nrow(thisPeptide_4_heavy) > 0) {
+                                        thisPeptide_4_trans_tmp <- data.frame(FragmentIon=thisPeptide_4_heavy$FragmentIon, isotope_warining=rep("heavy", nrow(thisPeptide_4_heavy)))
+                                        thisPeptide_4_trans <- rbind(thisPeptide_4_trans, thisPeptide_4_trans_tmp)
+                                    }
+                                    if (nrow(thisPeptide_4_light) > 0) {
+                                        for (i in 1:nrow(thisPeptide_4_light)) {
+                                        if (thisPeptide_4_light$FragmentIon[i] %in% thisPeptide_4_trans$FragmentIon) {
+                                            thisPeptide_4_trans$isotope_warining <- as.character(thisPeptide_4_trans$isotope_warining)
+                                            thisPeptide_4_trans$isotope_warining[thisPeptide_4_trans$FragmentIon == thisPeptide_4_light$FragmentIon[i]] <- 'heavy or light'
+                                        } else {
+                                            thisPeptide_4_trans_tmp <- data.frame(FragmentIon=thisPeptide_4_light$FragmentIon[i], isotope_warining='light')
+                                            thisPeptide_4_trans <- rbind(thisPeptide_4_trans, thisPeptide_4_trans_tmp)
+                                        }
+                                        }
+                                    }
+                                    errorType <- "Warning"
+                                    errorSubtype <- "High variance"
+                                    errorReasonTmp <- c()
+                                    for (i in 1:nrow(thisPeptide_4_trans)) {
+                                        errorReasonTmp <- c(errorReasonTmp, paste("for fragment ion ", thisPeptide_4_trans[i, ]$FragmentIon, ", not all of the transition ratios from ", thisPeptide_4_trans[i, ]$isotope_warining, ' isotope labeled peptide are within 30% of the mean', sep = ''))
+                                    }
+                                    errorReason <- paste('When checking samples with the concentrations above LLOQ, ', paste(errorReasonTmp, collapse = ', '), '.', sep='')
+                                    errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
+                                    cat(errorInfor)
+                                    cat('\n')
+                                }
+                                
+                                # Step 2, for each ion transition, take the transformation + t-test approach for the calculation of p value to determine if there is a significant difference between the means of two groups (heavy and mean).
+                                thisPeptide_3$heavyArea_transition_ratio_log <- suppressWarnings(log(thisPeptide_3$heavyArea_transition_ratio/(1-thisPeptide_3$heavyArea_transition_ratio)))
+                                thisPeptide_3$lightArea_transition_ratio_log <- suppressWarnings(log(thisPeptide_3$lightArea_transition_ratio/(1-thisPeptide_3$lightArea_transition_ratio)))
+                                # Replace Inf and -Inf with NA
+                                thisPeptide_3$heavyArea_transition_ratio_log[which(thisPeptide_3$heavyArea_transition_ratio_log == Inf | thisPeptide_3$heavyArea_transition_ratio_log == -Inf)] <- NA
+                                thisPeptide_3$lightArea_transition_ratio_log[which(thisPeptide_3$lightArea_transition_ratio_log == Inf | thisPeptide_3$lightArea_transition_ratio_log == -Inf)] <- NA
+                                
+                                # Since t test can't be applied to the vectors with one element.
+                                # Remove fragment ion with only one data point
+                                fragment_ion_to_remove <- c()
+                                for (fragmention_ion_to_check in unique(thisPeptide_3$FragmentIon)) {
+                                    if (nrow(thisPeptide_3[thisPeptide_3$FragmentIon==fragmention_ion_to_check, ]) == 1) {
+                                        fragment_ion_to_remove <- c(fragment_ion_to_remove, fragmention_ion_to_check)
+                                    }
+                                }
+                                thisPeptide_3 <- thisPeptide_3[!(thisPeptide_3$FragmentIon %in% fragment_ion_to_remove), ]
+                                
+                                if (nrow(thisPeptide_3) > 1) {
+                                    try ({
+                                        thisPeptide_5 <- as.data.frame(thisPeptide_3 %>%
+                                                                        dplyr::group_by(ProteinName, PeptideModifiedSequence, PrecursorCharge, ProductCharge, FragmentIon) %>%
+                                                                        dplyr::summarise(heavyArea_transition_ratio_log_mean=mean(heavyArea_transition_ratio_log, na.rm=TRUE), lightArea_transition_ratio_log_mean=mean(lightArea_transition_ratio_log, na.rm=TRUE), pValue.log=t.test(heavyArea_transition_ratio_log, lightArea_transition_ratio_log)$p.value, heavyArea_transition_ratio_mean=mean(heavyArea_transition_ratio, na.rm=TRUE), lightArea_transition_ratio_mean=mean(lightArea_transition_ratio, na.rm=TRUE), pValue=t.test(heavyArea_transition_ratio, lightArea_transition_ratio)$p.value))
+                                        thisPeptide_5$Internal_standard <- rep(internal_standards[1], nrow(thisPeptide_5))
+                                        if (internal_standards[1]=='light') {
+                                            thisPeptide_5$relative_difference <- (thisPeptide_5$heavyArea_transition_ratio_mean-thisPeptide_5$lightArea_transition_ratio_mean)/thisPeptide_5$lightArea_transition_ratio_mean
+                                        } else {
+                                            thisPeptide_5$relative_difference <- (thisPeptide_5$lightArea_transition_ratio_mean-thisPeptide_5$heavyArea_transition_ratio_mean)/thisPeptide_5$heavyArea_transition_ratio_mean
+                                        }
+                                        
+                                        #peptide_to_output <- c('TDAHFVDVIK')
+                                        #if (input_peptide_sequence %in% peptide_to_output) {
+                                        #  write.table(format(thisPeptide_5, digits=4), file = paste(plot_output_dir, "\\", input_peptide_sequence, '_', indexLabel, '_transitonRatioTable.tsv', sep=''), sep = "\t", qmethod = "double", col.names=TRUE, row.names=FALSE, quote=FALSE)
+                                        #}
+                                        
+                                        thisPeptide_5 <- thisPeptide_5[thisPeptide_5$pValue < pValue_threshold & abs(thisPeptide_5$relative_difference > relative_difference_threshold), ]
+                                        if (nrow(thisPeptide_5) > 0) {
+                                            errorType <- "Warning"
+                                            errorSubtype <- "High variance"
+                                            errorReasonTmp <- c()
+                                            for (i in 1:nrow(thisPeptide_5)) {
+                                            errorReasonTmp <- c(errorReasonTmp, paste("for fragment ion ", thisPeptide_5[i, ]$FragmentIon, ", the mean of transition ratios from the heavy isotope labeled peptide (", round(thisPeptide_5[i, ]$heavyArea_transition_ratio_mean, 4), ') is significantly different from the mean of transition ratios from the light isotope labeled peptide (', round(thisPeptide_5[i, ]$lightArea_transition_ratio_mean, 4), ') and the relatvie difference (comparing to the internal standard type: ' ,thisPeptide_5[i, ]$Internal_standard, ') is ', paste(round(100*thisPeptide_5[i, ]$relative_difference, 4), "%", sep=""), sep = ''))
+                                            }
+                                            errorReason <- paste('When checking samples with the concentrations above LLOQ, ', paste(errorReasonTmp, collapse = ', '), '.', sep='')
+                                            errorInfor <- paste(c(c(SkyDocumentName, errorType, errorSubtype, errorReason, input_protein_name, input_peptide_sequence), rep('', colNumber-3)), collapse='\t')
+                                            cat(errorInfor)
+                                            cat('\n')
+                                        }
+                                    }, silent = TRUE)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
