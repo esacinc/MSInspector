@@ -222,7 +222,7 @@ colnames(QC_set_total)[colnames(QC_set_total)=="productcharge"] <- "product_char
 colnames(QC_set_total)[colnames(QC_set_total)=="fragmention"] <- "fragment_ion_only"
 colnames(QC_set_total)[colnames(QC_set_total)=="analyteconcentration"] <- "analyte_concentration"      # three concentration levels (no spike and two analyte spikes)
 colnames(QC_set_total)[colnames(QC_set_total)=="replicatenumber"] <- "replicate" # recplicate number
-colnames(QC_set_total)[colnames(QC_set_total)=="exp3samplegroup"] <- "sample_group"     # individual samples of the matrix of interest
+colnames(QC_set_total)[colnames(QC_set_total)=="samplegroup"] <- "sample_group"     # individual samples of the matrix of interest
 colnames(QC_set_total)[colnames(QC_set_total)=="isotopelabeltype"] <- "isotope_label_type"     # light, heavy
 colnames(QC_set_total)[colnames(QC_set_total)=="area"] <- "area"
 
