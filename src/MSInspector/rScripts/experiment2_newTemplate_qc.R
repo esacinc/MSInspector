@@ -102,7 +102,7 @@ plot_output_dir <- args[4]
 #dataset_path <- "normal_data.tsv"
 #fileList_path <- "file_namelist_IS.tsv"
 #plot_output <- "True"
-#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\qcAssayPortal\\src\\qcAssayPortal\\rScripts\\test\\cv_cutoof_exp2\\tmp"
+#plot_output_dir <- "D:\\Skyline_analysis\\qcAssayPortal\\qcAssayPortal\\src\\qcAssayPortal\\rScripts\\test\\exp2_new_error\\tmp"
 
 
 
@@ -1040,11 +1040,34 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     mean_Hi <- mean_for_concentration_by_ion[i, 'mean_Hi']
                     mean_Med <- mean_for_concentration_by_ion[i, 'mean_Med']
                     mean_Lo <- mean_for_concentration_by_ion[i, 'mean_Lo']
-                    if (mean_Hi >= mean_Med & mean_Med >= mean_Lo) {
-                        normal_count <- normal_count + 1
-                    } else {
-                        abnormal_count <- abnormal_count + 1
-                        abnormal_fragment_ion <- c(abnormal_fragment_ion, mean_for_concentration_by_ion[i, 'fragment_ion'])
+                    compare_1 <- mean_Hi >= mean_Med
+                    compare_2 <- mean_Med >= mean_Lo
+                    compare_1_na_status <- !is.na(compare_1)
+                    compare_2_na_status <- !is.na(compare_2)
+                    
+                    if (compare_1_na_status | compare_2_na_status) {
+                      if (compare_1_na_status & compare_2_na_status) {
+                        if (compare_1 & compare_2) {
+                          normal_count <- normal_count + 1
+                        } else {
+                          abnormal_count <- abnormal_count + 1
+                          abnormal_fragment_ion <- c(abnormal_fragment_ion, mean_for_concentration_by_ion[i, 'fragment_ion'])
+                        }
+                      } else if (compare_1_na_status) {
+                        if (compare_1) {
+                          normal_count <- normal_count + 1
+                        } else {
+                          abnormal_count <- abnormal_count + 1
+                          abnormal_fragment_ion <- c(abnormal_fragment_ion, mean_for_concentration_by_ion[i, 'fragment_ion'])
+                        }
+                      } else {
+                        if (compare_2) {
+                          normal_count <- normal_count + 1
+                        } else {
+                          abnormal_count <- abnormal_count + 1
+                          abnormal_fragment_ion <- c(abnormal_fragment_ion, mean_for_concentration_by_ion[i, 'fragment_ion'])
+                        }
+                      }
                     }
                 }
                 abnormal_fragment_ion <- unique(abnormal_fragment_ion)

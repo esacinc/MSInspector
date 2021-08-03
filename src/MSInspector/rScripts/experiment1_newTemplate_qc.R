@@ -1230,12 +1230,14 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                             thisPeptide_3_sum <- thisPeptide_2[thisPeptide_2$FragmentIon=='Sum', ]
                             thisPeptide_3 <- thisPeptide_2[thisPeptide_2$FragmentIon!='Sum', ]
                             
-                            # In the old template of Experiment 1, replicate (replicate name) is a identifier to determine the each sample.
+                            # In the old template of Experiment 1, replicate (replicate name) is a identifier to determine each sample.
+                            # In the new template of Experiment 1, Replicate (replicate number) plus sample group plus concentration can be used as an identifier to determine each sample.
                             heavyArea_transition_ratio <- c()
                             lightArea_transition_ratio <- c()
                             for (i in 1:nrow(thisPeptide_3)) {
                               row <- thisPeptide_3[i,]
-                              row_sum_tmp <- thisPeptide_3_sum[thisPeptide_3_sum$Replicate==row$Replicate, ]
+                              #row_sum_tmp <- thisPeptide_3_sum[thisPeptide_3_sum$Replicate==row$Replicate, ]
+                              row_sum_tmp <- thisPeptide_3_sum[thisPeptide_3_sum$Replicate==row$Replicate & thisPeptide_3_sum$SampleGroup==row$SampleGroup & thisPeptide_3_sum$Concentration==row$Concentration, ]
                               heavyArea_transition_ratio <- c(heavyArea_transition_ratio, row$heavyArea/row_sum_tmp$heavyArea)
                               lightArea_transition_ratio <- c(lightArea_transition_ratio, row$lightArea/row_sum_tmp$lightArea)
                             }
