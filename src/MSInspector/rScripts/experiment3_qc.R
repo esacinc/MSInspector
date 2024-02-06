@@ -3,11 +3,13 @@
 #   esac-panorama-master\experiment-3\code\Experiment_3_with_labkey_connection_updated_only_plot_4_ions.R
 
 suppressWarnings(suppressMessages(library(Cairo)))
-suppressWarnings(suppressMessages(library(dplyr)))
+suppressWarnings(suppressMessages(library(dplyr, warn.conflicts = FALSE)))
 suppressWarnings(suppressMessages(library(ggplot2)))
 suppressWarnings(suppressMessages(library(stringr)))
 suppressWarnings(suppressMessages(library(evaluate)))
 suppressWarnings(suppressMessages(require(reshape2)))
+
+options(dplyr.summarise.inform = FALSE)
 
 ##variable that specifies whether the script takes a standalone csv file vs going through Panorama
 standalone <- TRUE
@@ -80,7 +82,8 @@ plot_QC <- function(plot_fragment_ion_results, input_peptide_sequence, current_i
   g <- ggplot(plot_ave_reps, aes(x=spike_level, y=calculated_area_ratio_ave_reps,
                                  color=cell_line, group=cell_line)) +
     geom_point(size=2.5) +
-    geom_smooth(method="lm",linetype="dashed",se = FALSE) +
+    geom_smooth(formula = y ~ x, method="lm", linetype="dashed", se = FALSE) +
+    #geom_smooth(method="lm",linetype="dashed",se = FALSE) +
     ##geom_line(aes(group=cell_line),linetype="dashed") +
     ggtitle(plot_title) +
     ##coord_trans(y="log10") +
@@ -1029,8 +1032,8 @@ for (SkyDocumentName in as.character(fileDf[, "SkyDocumentName"])) {
                     fragment_ion_results_plot <- fragment_ion_results[fragment_ion_results$fragment_ion %in% ions_to_plot, ]
                     fragment_ion_results_plot_2 <- fragment_ion_results_plot[fragment_ion_results_plot$spike_level > 0, ]
                     fragment_ion_results_plot_2 <- as.data.frame(fragment_ion_results_plot_2 %>%
-                                                     group_by(Peptide, Protein_Name, Precursor_Charge, fragment_ion, spike_level) %>%
-                                                     summarise(Ratio_mean=mean(calculated_area_ratio), Ratio_max=max(calculated_area_ratio), Ratio_min=min(calculated_area_ratio)))
+                                                     dplyr::group_by(Peptide, Protein_Name, Precursor_Charge, fragment_ion, spike_level) %>%
+                                                     dplyr::summarise(Ratio_mean=mean(calculated_area_ratio), Ratio_max=max(calculated_area_ratio), Ratio_min=min(calculated_area_ratio)))
                     fragment_ion_results_plot_3 <- fragment_ion_results_plot_2[!((fragment_ion_results_plot_2$Ratio_max <= 1.3*fragment_ion_results_plot_2$Ratio_mean & fragment_ion_results_plot_2$Ratio_max >= 0.7*fragment_ion_results_plot_2$Ratio_mean) & (fragment_ion_results_plot_2$Ratio_min <= 1.3*fragment_ion_results_plot_2$Ratio_mean & fragment_ion_results_plot_2$Ratio_min >= 0.7*fragment_ion_results_plot_2$Ratio_mean)),]
                     if (nrow(fragment_ion_results_plot_3) > 0) {
                         unique_fragment_ion <- unique(fragment_ion_results_plot_3$fragment_ion)

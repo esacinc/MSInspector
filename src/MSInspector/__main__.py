@@ -2,12 +2,12 @@
 # 
 
 __author__ = 'Yin Lu'
-__copyright__ = 'Copyright 2018, ESAC, Inc'
+__copyright__ = 'Copyright 2023, ICF International, Inc.'
 __credits__ = ['Yin Lu']
 __license__ = 'GPL'
-__version__ = '1.1'
+__version__ = '2.1.0'
 __maintainer__ = 'Yin Lu'
-__email__ = 'yin.lu@esacinc.com'
+__email__ = 'yin.lu@icf.com'
 
 # System imports
 import os
@@ -22,12 +22,12 @@ import subprocess
 try:
 	import pandas as pd
 except ImportError:
-    print 'The package named pandas is mising. Please refer to the tutorial to install it.'
+    print('The package named pandas is mising. Please refer to the tutorial to install it.')
     sys.exit(1)
 try:
 	import jinja2
 except ImportError:
-    print 'The package named Jinja2 is mising. Please refer to the tutorial to install it.'
+    print('The package named Jinja2 is mising. Please refer to the tutorial to install it.')
     sys.exit(1)
 
 from MSInspector.utils.parseArgument import *
@@ -47,7 +47,8 @@ def main():
 	htmlTempsDir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'htmlTemps')
 
 	if experiment_type not in ['exp1', 'exp2', 'exp3', 'exp4', 'exp5']:
-		print >> sys.stderr, "Invalid experiment type. Please check it."
+		#print >> sys.stderr, "Invalid experiment type. Please check it."
+		print("Invalid experiment type. Please check it.", file=sys.stderr)
 		sys.exit(1)
 	skyrTemp = os.path.join(skyrTempsDir, "MSInspector_report.skyr")
 	reportName = "MSInspector_report"
@@ -58,7 +59,7 @@ def main():
 							'new':common_col_list+['ReplicateNumber', 'Background', 'SampleGroup', 'InternalStandardConcentration', 'AnalyteConcentration', 'ConcentrationMultiplier', 'donotuse']},
 					'exp2':{'old':common_col_list+['Replicate', 'Concentration', 'SampleGroup'],
 						    'new':common_col_list+['ReplicateNumber', 'Day', 'Exp2SampleGroup']},
-					'exp3':common_col_list+['ReplicateNumber', 'AnalyteConcentration', 'Exp3SampleGroup'],
+					'exp3':common_col_list+['ReplicateNumber', 'AnalyteConcentration', 'SampleGroup'],
 					'exp4':common_col_list+['ReplicateNumber', 'Exp4SampleGroup', 'Temperature', 'Time', 'TimeUnits', 'FreezeThawCycles'],
 					'exp5':common_col_list+['ReplicateNumber', 'Day', 'SampleGroup']
 					}
@@ -93,10 +94,12 @@ def main():
 		if os.path.isfile(mypeptideType_file):
 			pass
 		elif mypeptideType_file == 'Null':
-			print >> sys.stderr, "Since -e is exp1, the directory of the file whose first column is the *.sky.zip and second column is peptide type must be indicated. Please check it"
+			#print >> sys.stderr, "Since -e is exp1, the directory of the file whose first column is the *.sky.zip and second column is peptide type must be indicated. Please check it"
+			print("Since -e is exp1, the directory of the file whose first column is the *.sky.zip and second column is peptide type must be indicated. Please check it", file=sys.stderr)
 			sys.exit(1)
 		else:
-			print >> sys.stderr, "the file with peptide types which is located at %s can't be found. Please check it."%(mypeptideType_file)
+			#print >> sys.stderr, "the file with peptide types which is located at %s can't be found. Please check it."%(mypeptideType_file)
+			print("the file with peptide types which is located at %s can't be found. Please check it."%(mypeptideType_file), file=sys.stderr)
 			sys.exit(1)
 	# if mypeptideType_file == 'Null' and  experiment_type != 'exp1', it means that this file won't be considered for exp2, exp3, exp4 and exp5
 	
@@ -106,7 +109,8 @@ def main():
 		with open(mypeptideType_file, 'r') as inf:
 			line = inf.readline()
 			if line.strip() != 'SkyDocumentName\tpeptide_standard_purity':
-				print >> sys.stderr, 'The first row of mypeptideType_file should be "SkyDocumentName\tpeptide_standard_purity". Please check it.' %(mypeptideType_file)
+				#print >> sys.stderr, 'The first row of mypeptideType_file should be "SkyDocumentName\tpeptide_standard_purity". Please check it.' %(mypeptideType_file)
+				print('The first row of mypeptideType_file should be "SkyDocumentName\tpeptide_standard_purity". Please check it.'%(mypeptideType_file), file=sys.stderr)
 				sys.exit(1)
 			line = inf.readline()
 			while line != "":
@@ -114,7 +118,8 @@ def main():
 				fileName = contentTmp[0]
 				mypeptideType = contentTmp[1]
 				if mypeptideType.lower() not in ["purified", "crude"]:
-					print >> sys.stderr, 'mypeptideType of %s is not purified or crude. Please check it.' %(mypeptideType_file)
+					#print >> sys.stderr, 'mypeptideType of %s is not purified or crude. Please check it.' %(mypeptideType_file)
+					print('mypeptideType of %s is not purified or crude. Please check it.'%(mypeptideType_file), file=sys.stderr)
 					sys.exit(1)
 				mypeptideType_Dic.update({fileName:mypeptideType.lower()})
 				line = inf.readline()
@@ -152,13 +157,15 @@ def main():
 	#SkylineCmdBinary = os.path.join(SkylineCmdBinary, 'SkylineCmd.exe')
 	executable1 = find_executable(SkylineCmdBinary)
 	if not executable1:
-		print >> sys.stderr, "SkylineCmd.exe can't be found in %s. Please check it."%(SkylineCmdBinary)
+		#print >> sys.stderr, "SkylineCmd.exe can't be found in %s. Please check it."%(SkylineCmdBinary)
+		print("SkylineCmd.exe can't be found in %s. Please check it."%(SkylineCmdBinary), file=sys.stderr)
 		sys.exit(1)
 	
 	RscriptBinary = args.RscriptBinary
 	executable2 = find_executable(RscriptBinary)
 	if not executable2:
-		print >> sys.stderr, "Rscript.exe can't be found in %s. Please check it."%(RscriptBinary)
+		#print >> sys.stderr, "Rscript.exe can't be found in %s. Please check it."%(RscriptBinary)
+		print("Rscript.exe can't be found in %s. Please check it."%(RscriptBinary), file=sys.stderr)
 		sys.exit(1)
 	
 	# Judge the input type: multiple *.sky.zip files or a directory.
@@ -171,18 +178,21 @@ def main():
 			if subfile[-8:] == ".sky.zip":
 				skyzip_file_dir_list.append(os.path.join(dirTmp, subfile))
 		if len(skyzip_file_dir_list) == 0:
-			print >> sys.stderr, "There is no *.sky.zip file in the directory of %s. Please check it."%(input[0])
+			#print >> sys.stderr, "There is no *.sky.zip file in the directory of %s. Please check it."%(input[0])
+			print("There is no *.sky.zip file in the directory of %s. Please check it."%(input[0]), file=sys.stderr)
 			sys.exit(1)
 	else:
 		if all(os.path.basename(inputTmp)[-8:]=='.sky.zip' for inputTmp in input):
 			for inputTmp in input:
 				skyzip_file_dir_list.append(os.path.abspath(inputTmp))
 			if len(skyzip_file_dir_list) == 0:
-				print >> sys.stderr, "The input files are not valid *.sky.zip files. Please check it."
+				#print >> sys.stderr, "The input files are not valid *.sky.zip files. Please check it."
+				print("The input files are not valid *.sky.zip files. Please check it.", file=sys.stderr)
 				sys.exit(1)
 		else:
 			invalidList = [os.path.basename(inputTmp) for inputTmp in input if os.path.basename(inputTmp)[-8:] != '.sky.zip']
-			print >> sys.stderr, "The input files %s are not valid *.sky.zip files. Please check it." %('; '.join(invalidList))
+			#print >> sys.stderr, "The input files %s are not valid *.sky.zip files. Please check it." %('; '.join(invalidList))
+			print("The input files %s are not valid *.sky.zip files. Please check it." %('; '.join(invalidList)), file=sys.stderr)
 			sys.exit(1)
 	# Judge whether there are duplicated skyzip file in the input list
 	# Pay attention to the format of name of *.skyzip file, usually it's suffilx is *_2017-02-03_18-00-08.sky.zip. After being unzipped, _2017-02-03_18-00-08 will be removed.
@@ -201,22 +211,25 @@ def main():
 			skyzip_file_dir_basename_list.append(subitem)
 	skyzip_file_dir_duplicated_list = [item for item in set(skyzip_file_dir_basename_list) if skyzip_file_dir_basename_list.count(item) > 1]
 	if len(skyzip_file_dir_duplicated_list) > 0:
-		print >> sys.stderr, "There are duplicated *.sky.zip files in the input which are: %s. Please check it." %('; '.join(skyzip_file_dir_duplicated_list))
+		#print >> sys.stderr, "There are duplicated *.sky.zip files in the input which are: %s. Please check it." %('; '.join(skyzip_file_dir_duplicated_list))
+		print("There are duplicated *.sky.zip files in the input which are: %s. Please check it." %('; '.join(skyzip_file_dir_duplicated_list)), file=sys.stderr)
 		sys.exit(1)
 	
 	# If experiment_type == 'exp1', judge whether all the *.sky.zip files have peptide_standard_purity types by comparing with the mypeptideType_file.
 	if experiment_type == 'exp1':
 		if len(skyzip_file_dir_basename_list_raw) != len(mypeptideType_Dic):
-			print >> sys.stderr, "The number of *.sky.zip files in %s is not equal to those in the input of the parameter -i. Please check it." %(mypeptideType_file)
+			#print >> sys.stderr, "The number of *.sky.zip files in %s is not equal to those in the input of the parameter -i. Please check it." %(mypeptideType_file)
+			print("The number of *.sky.zip files in %s is not equal to those in the input of the parameter -i. Please check it." %(mypeptideType_file), file=sys.stderr)
 			sys.exit(1)
 		for fileName in skyzip_file_dir_basename_list_raw:
 			if fileName not in mypeptideType_Dic.keys():
-				print >> sys.stderr, "The  *.sky.zip file from the input of the parameter -i which is %s can't be found in %s. Please check it." %(fileName, mypeptideType_file)
+				#print >> sys.stderr, "The  *.sky.zip file from the input of the parameter -i which is %s can't be found in %s. Please check it." %(fileName, mypeptideType_file)
+				print("The  *.sky.zip file from the input of the parameter -i which is %s can't be found in %s. Please check it." %(fileName, mypeptideType_file), file=sys.stderr)
 				sys.exit(1)
 	# Check is done!!!
 
 	# Unzip the sky.zip files in skyzip_file_dir_list one by one
-	print "Start to access and parse *.sky.zip files..."
+	print("Start to access and parse *.sky.zip files...")
 	time1 = time.time()
 	skyTsvDirList = []
 	skyFileDirList = []
@@ -231,7 +244,7 @@ def main():
 		zf.close()
 		#  test the suffix of os.path.basename(skyzip_file_dir)[:-8]
 		subitem = os.path.basename(skyzip_file_dir)
-		if subitem[:-8].split('_') >= 2:
+		if len(subitem[:-8].split('_')) >= 2:
 			listTmp = [subitem3 for subitem2 in subitem[:-8].split('_')[-2:] for subitem3 in subitem2.split('-')]
 			if all(subitem4.isdigit() for subitem4 in listTmp):
 				input_file_sky_tmp = '_'.join(subitem[:-8].split('_')[:-2])+'.sky'
@@ -250,24 +263,26 @@ def main():
 		#print '"%s" --timestamp --in="%s" --report-file="%s" --report-format=TSV --report-name=%s --report-add=%s --report-conflict-resolution=overwrite --report-invariant'%(SkylineCmdBinary, input_file_sky, output_file, reportName, skyrTemp)
 		while True:
 			buff = ps.stdout.readline()
-			if buff == '' and ps.poll() != None:
+			if buff.decode("ascii") == '' and ps.poll() != None:
 				break
 			else:
-				skylineCmdLogOutf.write(buff.strip()+'\n')
+				skylineCmdLogOutf.write(buff.decode("ascii").strip() +'\n')
 		skylineCmdLogOutf.write('****************\n')
 		#os.system('"%s" --timestamp --in="%s" --report-file="%s" --report-format=TSV --report-name=%s --report-add=%s --report-conflict-resolution=overwrite --report-invariant >> %s'%(SkylineCmdBinary, input_file_sky, output_file, reportName, skyrTemp, skylineCmdLog))
 		#os.system('"%s" --timestamp --in=%s --report-file=%s --report-format=TSV --report-name=%s --report-add=%s --report-conflict-resolution=overwrite >> %s'%(SkylineCmdBinary, input_file_sky, output_file, reportName, skyrTemp, skylineCmdLog))
 		output_file_new = os.path.join(skyFileTmpdir, input_file_sky_tmp[:-4]+'.tsv')
 		# judge whether output_file is successfully generated or not
 		if os.path.isfile(output_file):
-			for rowNumber, line in enumerate(open(output_file, 'rU')):
+			for rowNumber, line in enumerate(open(output_file, 'r')):
 			   pass
 			rowNumber += 1
 			if rowNumber < 2:
-				print >> sys.stderr, "The *.sky file in %s is blank after been parsed by %s. Please check it."%(skyzip_file_dir, SkylineCmdBinary)
+				#print >> sys.stderr, "The *.sky file in %s is blank after been parsed by %s. Please check it."%(skyzip_file_dir, SkylineCmdBinary)
+				print("The *.sky file in %s is blank after been parsed by %s. Please check it."%(skyzip_file_dir, SkylineCmdBinary), file=sys.stderr)
 				sys.exit(1)
 		else:
-			print >> sys.stderr, "The file %s can't be accessed by %s. Please check the version compatibility between Skyline document and Skyline program."%(skyzip_file_dir, SkylineCmdBinary)
+			#print >> sys.stderr, "The file %s can't be accessed by %s. Please check the version compatibility between Skyline document and Skyline program."%(skyzip_file_dir, SkylineCmdBinary)
+			print("The file %s can't be accessed by %s. Please check the version compatibility between Skyline document and Skyline program."%(skyzip_file_dir, SkylineCmdBinary), file=sys.stderr)
 			sys.exit(1)
 		
 		# Firstly, modify the output_file. If the row number of output_file is 0, True will be stored in fileNameEmptyStatusDic.
@@ -282,30 +297,33 @@ def main():
 	# If some Skyline files are blank, the program will stop and error message will be printed.
 	if any([fileNameEmptyStatusDic[fileName] for fileName in fileNameList]):
 		fileNameBlankList = [fileName for fileName in fileNameList if fileNameEmptyStatusDic[fileName]]
-		print >> sys.stderr, "The input *.sky.zip file(s), including %s, has(have) no data. Please check it(them) in Skyline.\n"%(", ".join(fileNameBlankList))
+		#print >> sys.stderr, "The input *.sky.zip file(s), including %s, has(have) no data. Please check it(them) in Skyline.\n"%(", ".join(fileNameBlankList))
+		print("The input *.sky.zip file(s), including %s, has(have) no data. Please check it(them) in Skyline.\n"%(", ".join(fileNameBlankList)), file=sys.stderr)
 		sys.exit(1)
 	# If the inferred experiment type is different from the input one for some Skyline files, the program will stop and error message will be printed.
 	if any([fileNameInferredExpStatusDic[fileName] for fileName in fileNameList]):
 		fileNameWrongExpList = [fileName for fileName in fileNameList if fileNameInferredExpStatusDic[fileName]]
-		print >> sys.stderr, "The experiment type(s) of the input *.sky.zip file(s), including %s, is(are) wrong according to the annotated attributes. Please check it(them) in Skyline.\n"%(", ".join(fileNameWrongExpList))
+		#print >> sys.stderr, "The experiment type(s) of the input *.sky.zip file(s), including %s, is(are) wrong according to the annotated attributes. Please check it(them) in Skyline.\n"%(", ".join(fileNameWrongExpList))
+		print("The experiment type(s) of the input *.sky.zip file(s), including %s, is(are) wrong according to the annotated attributes. Please check it(them) in Skyline.\n"%(", ".join(fileNameWrongExpList)), file=sys.stderr)
 		sys.exit(1)
 	# Because for exp1 and exp2, there may be two skyline templates. All the input *.sky.zip files must share the same template, otherwise, an error will be thrown and the program will be stopped.
 	if experiment_type in ['exp1', 'exp2']:
 		if len(set([fileNameSkylineTmpTypeDic[fileName] for fileName in fileNameList])) > 1:
-			print >> sys.stderr, "The input *.sky.zip files, including %s, are not annotated using the same Skyline template. Please check them in Skyline.\n"%(", ".join(fileNameList))
+			#print >> sys.stderr, "The input *.sky.zip files, including %s, are not annotated using the same Skyline template. Please check them in Skyline.\n"%(", ".join(fileNameList))
+			print("The input *.sky.zip files, including %s, are not annotated using the same Skyline template. Please check them in Skyline.\n"%(", ".join(fileNameList)), file=sys.stderr)
 			sys.exit(1)
 
 	time2 = time.time()
 	skylineCmdLogOutf.close()
 	if experiment_type == 'exp1':
-		fileNameSelceted = fileNameSkylineTmpTypeDic.keys()[0]
+		fileNameSelceted = list(fileNameSkylineTmpTypeDic.keys())[0]
 		skylineTemp_type =  fileNameSkylineTmpTypeDic[fileNameSelceted]
 		if skylineTemp_type == 'old':
 			rScript = os.path.join(rScriptsDir, "experiment1_oldTemplate_qc.R")
 		else:
 			rScript = os.path.join(rScriptsDir, "experiment1_newTemplate_qc.R")
 	elif experiment_type == 'exp2':
-		fileNameSelceted = fileNameSkylineTmpTypeDic.keys()[0]
+		fileNameSelceted = list(fileNameSkylineTmpTypeDic.keys())[0]
 		skylineTemp_type =  fileNameSkylineTmpTypeDic[fileNameSelceted]
 		if skylineTemp_type == 'old':
 			rScript = os.path.join(rScriptsDir, "experiment2_oldTemplate_qc.R")
@@ -320,10 +338,10 @@ def main():
 		rScript = os.path.join(rScriptsDir, "experiment5_qc.R")
 		reportName="experiment5"
 	
-	print "It takes %.2fsec."%(time2-time1)
+	print("It takes %.2fsec."%(time2-time1))
 	# Step 1: QC each *.sky in skyTsvDirList
 	# In this step, the peptides with missing values and duplicated peptides will be stored in errorDf, the rest peptides will be stored in normalDf
-	print "QC of %s is running..."%(reportName)
+	print("QC of %s is running..."%(reportName))
 	errorDf, normalDf, peptide_excluded_in_Rscript_Df = qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_dic, waived_col_dic, fileNameSkylineTmpTypeDic, col_dataType_dic)
 	errorDfColNumber = errorDf.columns.size
 	errorDf.to_csv(outf1, sep='\t', header=True, index=False)
@@ -339,7 +357,8 @@ def main():
 		for item_tmp1 in set(skyFileDirListTmp):
 			if skyFileDirListTmp.count(item_tmp1) > 1:
 				skyFileDirDup_list.append(item_tmp1)
-		print >> sys.stderr, "There are multiple *.sky files with the same name(s) in the input after being unzipped, which are(is) : %s. Please check it."%('; '.join(skyFileDirDup_list))
+		#print >> sys.stderr, "There are multiple *.sky files with the same name(s) in the input after being unzipped, which are(is) : %s. Please check it."%('; '.join(skyFileDirDup_list))
+		print("There are multiple *.sky files with the same name(s) in the input after being unzipped, which are(is) : %s. Please check it."%('; '.join(skyFileDirDup_list)), file=sys.stderr)
 		sys.exit(1)
 	
 	with open(outf3, 'w') as outfTmp:
@@ -436,7 +455,7 @@ def main():
 	outf6 = os.path.join(outputdir, 'statistical_tables_on_Assay_Portal.csv')
 	output_statistical_tables(peptide_infor_file, plot_output_dir, outf6, experiment_type)
 	time3 = time.time()
-	print "It takes %.2fsec."%(time3-time2)
+	print("It takes %.2fsec."%(time3-time2))
 	
 
 if __name__ == '__main__':

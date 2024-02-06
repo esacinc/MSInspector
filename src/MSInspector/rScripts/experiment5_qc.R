@@ -11,7 +11,6 @@ suppressWarnings(suppressMessages(library(stringr)))
 suppressWarnings(suppressMessages(library(evaluate)))
 suppressWarnings(suppressMessages(require(reshape2)))
 
-
 plot_QC <- function(plot_fragment_ion_results, input_peptide_sequence, current_ion, days) {
 
 

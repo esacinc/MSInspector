@@ -18,9 +18,10 @@ suppressWarnings(suppressMessages(library(Cairo)))
 suppressWarnings(suppressMessages(library(stringr)))
 suppressWarnings(suppressMessages(library(evaluate)))
 suppressWarnings(suppressMessages(require(reshape2)))
-suppressWarnings(suppressMessages(require(dplyr)))
+suppressWarnings(suppressMessages(require(dplyr, warn.conflicts = FALSE)))
 suppressWarnings(suppressMessages(require(plyr)))
 
+options(dplyr.summarise.inform = FALSE)
 
 # ***** plot_QC function *****
 plot_QC <- function(plot_fragment_ion_results, input_peptide_sequence, current_ion, days) {

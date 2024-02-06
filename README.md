@@ -33,9 +33,9 @@ Installation
 MSInspector is implemented as a Python program running on a Windows platform that requires pre-installation of Skyline https://skyline.ms/project/home/software/Skyline/begin.view and R https://cran.r-project.org/bin/windows/base/  <br />
 
 It has the following dependencies:
-* For the Python (v2.7.\*) programming language: requires Python-related libraries, including pandas(>= v0.21.0) and Jinja2(v2.9.6). <br /><br />
-* For the R (v3.5.\* is recommended) programming language: requires R-related libraries, including Cairo, evaluate, stringr, plyr, MASS, ggplot2, reshape2 and dplyr. In the R console, in order to install required libraries, please run `install.packages(c("Cairo", "evaluate", "stringr", "plyr", "MASS", "ggplot2", "reshape2", "dplyr"))`. Then, check the installed ggplot2 version by running: `packageVersion("ggplot2")`. If the version is >= 3.3.0, uninstall ggplot2 by running: `remove.packages("ggplot2")`, then install ggplot2 version 3.1.0 by running: `install.packages("http://cran.r-project.org/src/contrib/Archive/ggplot2/ggplot2_3.1.0.tar.gz", repos = NULL, type = "source")`.<br /><br />
-* For Skyline (v4.2 is recommended): requires pre-installed Skyline command-line interface https://skyline.ms/_webdav/home/software/Skyline/@files/docs/Skyline%20Command-Line%20Interface-3_7.pdf. Or install Skyline administrator downloaded from https://skyline.ms/wiki/home/software/Skyline/page.view?name=install-administator-64. The command-line toolSkylineCmd.exe can be found in the installation directory. <br />
+* For the Python (v3.11.\*) programming language: requires Python-related libraries, including pandas(>= v2.0.0) and Jinja2(v3.1.2). <br /><br />
+* For the R (v4.3.\* is recommended) programming language: requires R-related libraries, including Cairo, evaluate, stringr, plyr, MASS, ggplot2, reshape2 and dplyr. In the R console, in order to install required libraries, please run `install.packages(c("Cairo", "evaluate", "stringr", "plyr", "MASS", "ggplot2", "reshape2", "dplyr"))`. <br /><br />
+* For Skyline (v23.1 is recommended): requires pre-installed Skyline command-line interface https://skyline.ms/_webdav/home/software/Skyline/@files/docs/Skyline%20Command-Line%20Interface-3_7.pdf. Or install Skyline administrator downloaded from https://skyline.ms/wiki/home/software/Skyline/page.view?name=install-administator-64. The command-line toolSkylineCmd.exe can be found in the installation directory. <br />
 
 MSInspector can be installed from the source code by pip:<br />
 1) Download MSInspector source code from URL and unzip the zipped file folder.<br />
@@ -52,10 +52,10 @@ How to use it
     Usage: MSInspector [-h] [<args>]
 
     Example 1:
-    MSInspector -ps "C:\Program Files\SkylineDailyRunner\SkylineDailyRunner.exe" -pr "C:\Program Files\R\R-3.5.2\bin\Rscript.exe" -i "D:\Skyline_analysis\MSInspector\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp1?0309_MouseV2B1.5_refined_2018-07-03_14-59-18.sky.zip" -e exp1 -t "D:\Skyline_analysis\MSInspector\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp1\meta_data.tsv"
+    MSInspector -ps "C:\Program Files\Skyline\SkylineCmd.exe"" -pr "C:\Program Files\R\R-4.3.2\bin\Rscript.exe" -i "D:\Skyline_analysis\qcAssayPortal\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp1\20160309_MouseV2B1.5_refined_2018-07-03_14-59-18.sky.zip" -e exp1 -t "D:\Skyline_analysis\qcAssayPortal\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp1\meta_data.tsv"
     
     Example 2:
-    MSInspector -ps "C:\Program Files\Skyline\SkylineCmd.exe" -pr "C:\Program Files\R\R-3.5.2\bin\Rscript.exe" -i "D:\Skyline_analysis\MSInspector\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp2" -e exp2
+    MSInspector -ps "C:\Program Files\Skyline\SkylineCmd.exe" -pr "C:\Program Files\R\R-4.3.2\bin\Rscript.exe" -i "D:\Skyline_analysis\qcAssayPortal\data\UVicPC_Borchers-MousePlasma_Agilent6490_directMRM-Exp2" -e exp2
 
     optional arguments:
       -h, --help            show this help message and exit
@@ -79,6 +79,7 @@ Changelog
 2019-12-03 Add errors and warnings detecting function to experiment 3.<br />
 2020-01-17 Add errors and warnings detecting function to experiment 4.<br />
 2020-03-19 Add errors and warnings detecting function to experiment 5.<br />
+2024-01-15 Update Python from Python 2.7 to Python 3.11<br />
 
 Citation
 --------

@@ -30,7 +30,8 @@ def countPeptide(inputList):
 def png2base64String(pngsrc):
 	with open(pngsrc, "rb") as imageFile:
 		pngString = base64.b64encode(imageFile.read())
-	return pngString
+	#return pngString
+	return pngString.decode("ascii")
 
 def string2escape(inputstr):
 	outstr = ''

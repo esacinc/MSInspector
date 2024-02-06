@@ -91,7 +91,7 @@ def qcAnalysisGlobal(experiment_type, skyTsvDirList, fileNameList, required_col_
 	#	sys.exit(1)
 	# Only keep the required columns based on required_col_dic
 	if experiment_type in ['exp1', 'exp2']:
-		fileNameSelceted = fileNameSkylineTmpTypeDic.keys()[0]
+		fileNameSelceted = list(fileNameSkylineTmpTypeDic.keys())[0]
 		skylineTemp_type =  fileNameSkylineTmpTypeDic[fileNameSelceted]
 		required_col_list = required_col_dic[experiment_type][skylineTemp_type]
 		waived_col_list = waived_col_dic[experiment_type][skylineTemp_type]
@@ -294,7 +294,11 @@ def detectIS(skyFileDir, fileName, experiment_type, error_report_path, errorDfCo
 def qcAnalysisRcode(experiment_type, error_report_path, dataset_path, fileList_path, mypeptideType_file_path, RscriptBinary, rScript, plot_output, plot_output_dir):
 	if experiment_type == 'exp2' or experiment_type == 'exp5' or experiment_type == 'exp3' or experiment_type == 'exp4':
 		#os.system('"%s" %s %s %s %s %s >> %s'%(RscriptBinary, rScript, dataset_path, fileList_path, plot_output, plot_output_dir, error_report_path))
-		subprocess.call([RscriptBinary, rScript, dataset_path, fileList_path, str(plot_output), plot_output_dir, ">>", error_report_path])
+		#subprocess.call([RscriptBinary, rScript, dataset_path, fileList_path, str(plot_output), plot_output_dir, ">>", error_report_path])
+		with open(error_report_path, mode='a') as fp:
+			subprocess.call([RscriptBinary, rScript, dataset_path, fileList_path, str(plot_output), plot_output_dir], stdout=fp)
 	if experiment_type == 'exp1':
 		#os.system('"%s" %s %s %s %s %s %s >> %s'%(RscriptBinary, rScript, dataset_path, fileList_path, plot_output, plot_output_dir, mypeptideType_file_path, error_report_path))
-		subprocess.call([RscriptBinary, rScript, dataset_path, fileList_path, str(plot_output), plot_output_dir, mypeptideType_file_path, ">>", error_report_path])
+		#subprocess.call([RscriptBinary, rScript, dataset_path, fileList_path, str(plot_output), plot_output_dir, mypeptideType_file_path, ">>", error_report_path])
+		with open(error_report_path, mode='a') as fp:
+			subprocess.run([RscriptBinary, rScript, dataset_path, fileList_path, str(plot_output), plot_output_dir, mypeptideType_file_path], stdout=fp)
