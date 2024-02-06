@@ -41,7 +41,7 @@ MSInspector can be installed from the source code by pip:<br />
 1) Download MSInspector source code from URL and unzip the zipped file folder.<br />
 2) If the package of wheel is not installed, run `pip install wheel` to install it.<br />
 3) Change the directory to MSInspector's directory and run `python setup.py bdist_wheel` to build a wheel file for the subsequent installation via pip.<br />
-4) Run `pip install .\dist\MSInspector-1.2-py2-none-any.whl` to install MSInspector.<br />
+4) Run `pip install .\dist\MSInspector-2.1.0-py3-none-any.whl` to install MSInspector.<br />
 
 
 How to use it
