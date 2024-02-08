@@ -527,6 +527,8 @@ def locateTableV2(peptideSeq, precursorCharge, fileList, experiment_type, dirNam
 		if os.path.isfile(f2):
 			f2_df = pd.read_csv(f2, sep='\t', header=0, converters={i: str for i in range(0, 100)})
 			f2_df_status = True
+		else:
+			f2_df = pd.DataFrame()
 		return([f1_status, f2_df_status], [f1, f2], [f1_df, f2_df])
 	if experiment_type == 'exp2' or experiment_type == 'exp3' or experiment_type == 'exp4' or experiment_type == 'exp5':
 		if experiment_type == 'exp3':
